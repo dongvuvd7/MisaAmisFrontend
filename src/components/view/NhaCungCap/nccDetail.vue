@@ -168,8 +168,8 @@
                                                     padding-right: 0px;
                                                     font-size: 13px;
                                                     height: 32px;
-                                                    margin-top: 11px;
-                                                    margin-bottom: 0px;"
+                                                    margin-top: 5px;
+                                                    margin-bottom: -7px;"
                                                     >
                                             <input type="text" class="department-blank-box" placeholder="Xưng hô" style="font-style: italic;"
                                                 @focus="showDropDownContentName()" 
@@ -226,16 +226,44 @@
                                                     font-size: 13px;
                                                     height: 32px;
                                                     margin-top: 5px;
-                                                    margin-bottom: 10px;"
+                                                    margin-bottom: -10px;"
                                                     >
-                                            <input type="text" class="department-blank-box" style="font-style: italic;"/>
+                                            <input type="text" class="department-blank-box" style="font-style: italic;"
+                                                @focus="showDropDownContentDktt()" 
+                                                @blur="hideDropDownContentDktt()"
+                                                v-model="dktt.name"
+                                            />
                                             <div class="icon-plus" style="margin-right: 8px;"></div>
-                                            <button id="dropdown-icon-1" style="background-position: -552px -353px; border-left: 1px solid #ccc;"></button>
-                                        </div>                  
+                                            <button id="dropdown-icon-1" style="background-position: -552px -353px; border-left: 1px solid #ccc;"
+                                                @focus="showDropDownContentDktt()" 
+                                                @blur="hideDropDownContentDktt()"
+                                            ></button>
+                                        </div> 
+                                        <div id="dropdown">     
+                                            <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionDktt}" 
+                                                style="width: ; max-height: 110px; overflow-y: scroll; z-index: 1;"
+                                            >
+                                                <div class="pre-line-options" style="display: flex; margin-left: 10px; height: 30px; font-weight: bold; align-items: center;">
+                                                    <span style="margin-right: 50px;">Mã điều khoản thanh toán </span>
+                                                    <span>Tên điều khoản thanh toán </span>
+                                                </div>
+                                                <div class="dropdown-content-a" 
+                                                :class="{'drop-down-content-selected' : optionDktt.id == dktt.id}"
+                                                v-for="optionDktt in optionsDktt" 
+                                                :key="optionDktt.id" 
+                                                @click="chooseOptionDktt(optionDktt)" 
+                                                @mouseenter="enterClick()" 
+                                                @mouseleave="leaveClick()"
+                                                >
+                                                    <div class="line-options" style="cursor: pointer;">
+                                                        <span style="margin-right: 185px;">{{optionDktt.id}}  </span>
+                                                        <span>{{optionDktt.name}} </span>
+                                                    </div>
+                                                  
+                                                </div>
+                                            </div>
+                                        </div>                 
                                     </div>
-
-                                    
-
                                     <div style="width: 22%; margin-left: 5px">
                                         <div style="position: relative;"><b>Số ngày được nợ</b>
                                         </div>
@@ -248,9 +276,6 @@
                                     </div>
                                 </div>
                                 <div style="position: relative; margin: 0 0 8px 12px;"><b>Tài khoản cồng nợ phải trả</b></div>
-                                <!-- <input type="text" class="medium-blank-box"
-                                    style="width: 22%; margin-left: 12px; font-style: italic; margin-top: -4px;"
-                                /> -->
                                 <div class="dropdown-text-and-icon"
                                     style=" width: 22%;
                                             padding: 6px 10px;
@@ -261,8 +286,38 @@
                                             margin-left: 12px;
                                             margin-bottom: 10px;"
                                             >
-                                    <input type="text" class="department-blank-box" style="font-style: italic;"/>
-                                    <button id="dropdown-icon-1" style="background-position: -552px -353px;"></button>
+                                    <input type="text" class="department-blank-box" style="font-style: italic;"
+                                        @focus="showDropDownContentTkcn()" 
+                                        @blur="hideDropDownContentTkcn()"
+                                        v-model="tkcn.id"
+                                    />
+                                    <button id="dropdown-icon-1" style="background-position: -552px -353px;"
+                                        @focus="showDropDownContentTkcn()" 
+                                        @blur="hideDropDownContentTkcn()"
+                                    ></button>
+                                </div>
+                                <div id="dropdown">     
+                                    <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionTkcn}" 
+                                        style="width: 400px; ; max-height: 110px; overflow-y: scroll; z-index: 1; margin-left: 10px; margin-top: -15px;"
+                                    >
+                                        <div class="pre-line-options" style="display: flex; margin-left: 10px; height: 30px; font-weight: bold; align-items: center;">
+                                            <span style="margin-right: 50px;">Số tài khoản </span>
+                                            <span>Tên tài khoản </span>
+                                        </div>
+                                        <div class="dropdown-content-a" 
+                                        :class="{'drop-down-content-selected' : optionTkcn.id == tkcn.id}"
+                                        v-for="optionTkcn in optionsTkcn" 
+                                        :key="optionTkcn.id" 
+                                        @click="chooseOptionTkcn(optionTkcn)" 
+                                        @mouseenter="enterClick()" 
+                                        @mouseleave="leaveClick()"
+                                        >
+                                            <div class="line-options" style="cursor: pointer; display: flex;">
+                                                <span style="width: 50px; margin-right: 72px;">{{optionTkcn.id}} </span>
+                                                <span>{{optionTkcn.name}} </span>
+                                            </div>                                            
+                                        </div>
+                                    </div>
                                 </div>  
                             </div>
                             <div v-show="showTab == 3" class="infor-bank">
@@ -506,7 +561,19 @@ export default {
     data() {
         return {
 
+            //xưng hô (tab1)
             danhXung: {
+                id: null,
+                name: "",
+            },
+
+            //điều khoản thanh toán (tab2)
+            dktt: {
+                id: null,
+                name: "",
+            },
+            //tài khoản cồng nợ (tab2)
+            tkcn: {
                 id: null,
                 name: "",
             },
@@ -514,6 +581,8 @@ export default {
             //Biến kiểm tra xem dữ liệu combobox có show ra hay không
             isShowOption: false,
             isShowOptionName: false,
+            isShowOptionDktt: false,
+            isShowOptionTkcn: false,
             //Option được chọn trong dropbox
             // selectedOption: {
             //     id: null,
@@ -572,6 +641,26 @@ export default {
                     name: "Bạn",
                 },
             ],
+            optionsDktt: [
+                {
+                    id: "ĐK1",
+                    name: "Điều khoản 1",
+                },
+                {
+                    id: "ĐK2",
+                    name: "Điều khoản 2",
+                },
+            ],
+            optionsTkcn: [
+                {
+                    id: "331",
+                    name: "Phải trả cho người bán",
+                },
+                {
+                    id: "3348",
+                    name: "Phải trả cho người lao động khác",
+                },
+            ],
             //Danh sách các lựa chọn ban đầu (không thay đổi)
             initialOptions: [
                 {
@@ -623,6 +712,26 @@ export default {
                 {
                     id: "8",
                     name: "Bạn",
+                },
+            ],
+            initialOptionsDktt: [
+                {
+                    id: "ĐK1",
+                    name: "Điều khoản 1",
+                },
+                {
+                    id: "ĐK2",
+                    name: "Điều khoản 2",
+                },
+            ],
+            initialOptionsTkcn: [
+                {
+                    id: "331",
+                    name: "Phải trả cho người bán",
+                },
+                {
+                    id: "3348",
+                    name: "Phải trả cho người lao động khác",
                 },
             ],
             //Biến kiểm tra xem chuột có di chuyển vào các option hay không, để phân biệt click với blur
@@ -734,6 +843,20 @@ export default {
                 }
             });
         },
+        dkttFormat(dkttId){
+            this.optionsDktt.forEach(optionDktt => {
+                if(dkttId == optionDktt.id){
+                    this.dktt.name = optionDktt.name;
+                }
+            });
+        },
+        tkcnFormat(tkcnId){
+            this.optionsTkcn.forEach(optionTkcn => {
+                if(tkcnId == optionTkcn.id){
+                    this.tkcn.name = optionTkcn.name;
+                }
+            });
+        },
 
         /**
          * So sánh 2 Object để kiểm tra xem dữ liệu đã thay đổi chưa
@@ -785,7 +908,14 @@ export default {
         showDropDownContentName(){
             this.optionsName = this.initialOptionsName;
             this.isShowOptionName = !this.isShowOptionName;      
-            
+        },
+        showDropDownContentDktt(){
+            this.optionsDktt = this.initialOptionsDktt;
+            this.isShowOptionDktt = !this.isShowOptionDktt;      
+        },
+        showDropDownContentTkcn(){
+            this.optionsTkcn = this.initialOptionsTkcn;
+            this.isShowOptionTkcn = !this.isShowOptionTkcn;      
         },
 
        /**
@@ -797,6 +927,12 @@ export default {
         },
         hideDropDownContentName(){
             if(this.overClick == false) this.isShowOptionName = false;
+        },
+        hideDropDownContentDktt(){
+            if(this.overClick == false) this.isShowOptionDktt = false;
+        },
+        hideDropDownContentTkcn(){
+            if(this.overClick == false) this.isShowOptionTkcn = false;
         },
 
         /**
@@ -818,6 +954,22 @@ export default {
             this.danhXungFormat(this.danhXung.id);
             this.overClick = false;
             this.hideDropDownContentName();
+        },
+        chooseOptionDktt(optionDktt){
+            //Gán giá trị được chọn cho id và tên phòng ban của employee
+            this.dktt.id = optionDktt.id;
+            // this.employee.departmentName = option.name;
+            this.dkttFormat(this.dktt.id);
+            this.overClick = false;
+            this.hideDropDownContentDktt();
+        },
+        chooseOptionTkcn(optionTkcn){
+            //Gán giá trị được chọn cho id và tên phòng ban của employee
+            this.tkcn.id = optionTkcn.id;
+            // this.employee.departmentName = option.name;
+            this.tkcnFormat(this.tkcn.id);
+            this.overClick = false;
+            this.hideDropDownContentTkcn();
         },
 
         /**
