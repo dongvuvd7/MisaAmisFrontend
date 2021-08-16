@@ -1,0 +1,3 @@
+Bản misa amis updating với nhiều trường hơn như nhà cung cấp, các thứ,...
+(giai đoạn 2)
+Đang sử dụng backend của bản NAB (chỉ có backend nhân viên) sẽ hoàn thiện dần backend các trường khác
