@@ -16,7 +16,7 @@
 
 <script>
 import axios from 'axios';
-const getAll = "https://localhost:44370/api/v1/Employees/"
+const getAll = "https://localhost:44342/api/v1/Employees/"
 export default {
     created() {
 

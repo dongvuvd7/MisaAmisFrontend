@@ -15,7 +15,7 @@
                 <div id="table">
 
                     <div id="statistical">
-                        <div class="stat-main" :class="{'show-statistical' : isShowStat}">
+                        <div class="stat-main" :class="{'show-statistical' : isShowStat}"> <!-- Đóng / mở stat, đóng thì thêm class kia vào (class có nhiệm vụ set vị trí của nút cao lên) -->
                             <div class="stat-bar" style="background-color: rgba(255,127,44,255);">
                                 <div class="stat-bar-top" style="position: relative;">
                                     <div class="sbt-money">
@@ -57,7 +57,7 @@
                         </div>
                     </div>
 
-                    <div id="search">
+                    <div id="search" :style="{'margin-top': !isShowStat ? '0px' : '-110px'}"> <!-- đóng stat thì đẩy thanh search lên (kéo theo đẩy cả table), sử dụng v-bind -->
                         <div id="search-bar-wrapper">
                             <div class="search-bar-and-icon">
                                 <input
@@ -78,7 +78,7 @@
                     </div>
                 
 
-                    <div class="data" :class="{'data-showStat' : isShowStat}" >
+                    <div class="data" :class="{'data-showStat' : isShowStat}" > <!-- đóng stat thì mở tăng chiều dài table ra -->
                         <div class="scroll">
                             <table class="table">
                                 <thead>
@@ -194,11 +194,11 @@ import EmployeeStopUsing from '../employee/employeeStopUsing.vue';
 import NCCDetail from '../NhaCungCap/nccDetail.vue';
 
 // khai báo biến cố định, code cho nhanh
-const getAll = "https://localhost:44370/api/v1/Employees";
-const getMaxCode = "https://localhost:44370/api/v1/Employees/MaxCode";
-const getExport = "https://localhost:44370/api/v1/Employees/Export";
-const getDepartments = "https://localhost:44370/api/v1/Employees/Department";
-const getFilter = "https://localhost:44370/api/v1/Employees/Filter?";
+const getAll = "https://localhost:44342/api/v1/Employees";
+const getMaxCode = "https://localhost:44342/api/v1/Employees/MaxCode";
+const getExport = "https://localhost:44342/api/v1/Employees/Export";
+const getDepartments = "https://localhost:44342/api/v1/Employees/Department";
+const getFilter = "https://localhost:44342/api/v1/Employees/Filter?";
 const gender = {
     male: "Nam",
     female: "Nữ",
@@ -717,7 +717,7 @@ export default {
             background-color: #f2f5f8;
             position: absolute;
             right: 0px;
-            top: 0px;
+            top: -30px;
             transform: rotate(180deg);
             /* transition: transform .15s linear; */
         }
@@ -857,7 +857,7 @@ tbody tr:hover {
     padding-bottom: 16px;
     overflow: hidden;
     /* height: 900px; */
-    height: calc(100% - 96px - 140px);
+    height: calc(100% - 96px - 30px);
     
   }
   

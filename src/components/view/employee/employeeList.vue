@@ -158,11 +158,11 @@ import EmployeeDelete from "../employee/employeeDelete.vue";
 import EmployeeStopUsing from '../employee/employeeStopUsing.vue';
 
 // khai báo biến cố định, code cho nhanh
-const getAll = "https://localhost:44370/api/v1/Employees";
-const getMaxCode = "https://localhost:44370/api/v1/Employees/MaxCode";
-const getExport = "https://localhost:44370/api/v1/Employees/Export";
-const getDepartments = "https://localhost:44370/api/v1/Employees/Department";
-const getFilter = "https://localhost:44370/api/v1/Employees/Filter?";
+const getAll = "https://localhost:44342/api/v1/Employees";
+const getMaxCode = "https://localhost:44342/api/v1/Employees/MaxCode";
+const getExport = "https://localhost:44342/api/v1/Employees/Export";
+const getDepartments = "https://localhost:44342/api/v1/Employees/Department";
+const getFilter = "https://localhost:44342/api/v1/Employees/Filter?";
 const gender = {
     male: "Nam",
     female: "Nữ",

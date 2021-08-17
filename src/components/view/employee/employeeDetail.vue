@@ -184,7 +184,7 @@
     import ErrorDialog from '../../common/pop-up/errorDialog.vue';
     import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
 
-    const getAll = "https://localhost:44370/api/v1/Employees"
+    const getAll = "https://localhost:44342/api/v1/Employees"
     const form = {
         add: "add",
         edit: "edit"
