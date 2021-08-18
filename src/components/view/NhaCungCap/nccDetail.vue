@@ -407,14 +407,13 @@
                                                 @focus="showDropDownContentQg()" 
                                                 @blur="hideDropDownContentQg()"
                                                 @keyup="searchOptionQg()"
-                                                v-model="qg.name"
+                                                v-model="qgSelected"
                                             />
                                             <button id="dropdown-icon-1"
                                                 @focus="showDropDownContentQg()" 
                                                 @blur="hideDropDownContentQg()"
                                             ></button>
                                         </div>
-
                                         <div id="dropdown">     
                                             <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionQg}" 
                                                 style="width: 194px; ; max-height: 130px; overflow-y: scroll; z-index: 1; margin-top: -5px;"
@@ -433,7 +432,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
                                     </div>
                                     <div style="width: 46%; margin-left: 5px">
                                         <div class="dropdown-text-and-icon"
@@ -442,11 +440,37 @@
                                                     padding-right: 0px;
                                                     font-size: 13px;
                                                     height: 32px;
-                                                    margin-top: 21px;
-                                                    margin-bottom: 10px;"
+                                                    margin-top: 27px;
+                                                    margin-bottom: 0px;"
                                                     >
-                                            <input type="text" class="department-blank-box" placeholder="Tỉnh / TP" style="font-style: italic;"/>
-                                            <button id="dropdown-icon-1"></button>
+                                            <input type="text" class="department-blank-box" placeholder="Tỉnh / Thành phố" style="font-style: italic;"
+                                                @focus="showDropDownContentTt()" 
+                                                @blur="hideDropDownContentTt()"
+                                                @keyup="searchCity()"
+                                                v-model="citySelected"
+                                            />
+                                            <button id="dropdown-icon-1" 
+                                                @focus="showDropDownContentTt()" 
+                                                @blur="hideDropDownContentTt()"
+                                            ></button>
+                                        </div>
+                                        <div id="dropdown">     
+                                            <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionTt}" 
+                                                style="width: 194px; ; max-height: 130px; overflow-y: scroll; z-index: 1; margin-top: -5px;"
+                                            >
+                                                <div class="dropdown-content-a" style="height: 34px;"
+                                                :class="{'drop-down-content-selected' : city.code == tt.code}"
+                                                v-for="city in cities" 
+                                                :key="city.code" 
+                                                @click="chooseOptionTt(city)" 
+                                                @mouseenter="enterClick()" 
+                                                @mouseleave="leaveClick()"
+                                                >
+                                                    <div class="line-options" style="cursor: pointer;">
+                                                        <span>{{city.name}} </span>
+                                                    </div>                                            
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -497,9 +521,35 @@
                                                     margin-top: 5px;
                                                     margin-bottom: 10px;"
                                                     >
-                                            <input type="text" class="department-blank-box" placeholder="Quận / Huyện" style="font-style: italic;"/>
-                                            <button id="dropdown-icon-1"></button>
-                                        </div>                    
+                                            <input type="text" class="department-blank-box" placeholder="Quận / Huyện" style="font-style: italic;"
+                                                @focus="showDropDownContentQh()" 
+                                                @blur="hideDropDownContentQh()"
+                                                @keyup="searchQh()"
+                                                v-model="qhSelected"
+                                            />
+                                            <button id="dropdown-icon-1"
+                                                @focus="showDropDownContentQh()" 
+                                                @blur="hideDropDownContentQh()"
+                                            ></button>
+                                        </div> 
+                                        <div id="dropdown">     
+                                            <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionQh}" 
+                                                style="width: 194px; ; max-height: 130px; overflow-y: scroll; z-index: 1; margin-top: -5px;"
+                                            >
+                                                <div class="dropdown-content-a" style="height: 34px;"
+                                                :class="{'drop-down-content-selected' : optionQh.code == qh.code}"
+                                                v-for="optionQh in optionsQh" 
+                                                :key="optionQh.code" 
+                                                @click="chooseOptionQh(optionQh)" 
+                                                @mouseenter="enterClick()" 
+                                                @mouseleave="leaveClick()"
+                                                >
+                                                    <div class="line-options" style="cursor: pointer;">
+                                                        <span>{{optionQh.name}} </span>
+                                                    </div>                                            
+                                                </div>
+                                            </div>
+                                        </div>                   
                                     </div>
                                     <div style="width: 46%; margin-left: 5px">
                                         <div class="dropdown-text-and-icon"
@@ -624,6 +674,23 @@ export default {
                 code: null,
                 name: "",
             },
+            qgSelected: [],
+            //Tỉnh / Thành
+            cities: [],
+            initialCities: [],
+            tt: {
+                code: null,
+                name: "",
+            },
+            citySelected: [],
+            //Quận / Huyện
+            optionsQh: [],
+            initialOptionsQh: [],
+            qh: {
+                code: null,
+                name: "",
+            },
+            qhSelected: [],
 
             //Biến kiểm tra xem dữ liệu combobox có show ra hay không
             isShowOption: false,
@@ -631,6 +698,8 @@ export default {
             isShowOptionDktt: false,
             isShowOptionTkcn: false,
             isShowOptionQg: false,
+            isShowOptionTt: false,
+            isShowOptionQh: false,
             //Option được chọn trong dropbox
             // selectedOption: {
             //     id: null,
@@ -1352,7 +1421,33 @@ export default {
     },
 
     watch: {
-
+        qgSelected: function(valu){
+            if(valu == "Việt Nam"){
+                console.log("Tỉnh / Thành");
+                axios
+                    .get(
+                        "https://provinces.open-api.vn/api/p/"
+                    )
+                    .then((res) => {
+                        this.cities = res.data;
+                        console.log(this.cities);
+                    })
+                    .catch((res) => {
+                        console.log(res);
+                    })
+                axios
+                    .get(
+                        "https://provinces.open-api.vn/api/p/"
+                    )
+                    .then((res) => {
+                        this.initialCities = res.data;
+                    })
+                    .catch((res) => {
+                        console.log(res);
+                    })
+            }
+        }
+        
     },
 
     methods: {
@@ -1405,6 +1500,23 @@ export default {
             this.optionsQg.forEach(optionQg => {
                 if(qgCode == optionQg.code){
                     this.qg.name = optionQg.name;
+                    this.qgSelected = optionQg.name;
+                }
+            });
+        },
+        ttFormat(ttCode){
+            this.cities.forEach(city => {
+                if(ttCode == city.code){
+                    this.tt.name = city.name;
+                    this.citySelected = city.name;
+                }
+            });
+        },
+        qhFormat(qhCode){
+            this.optionsQh.forEach(optionQh => {
+                if(qhCode == optionQh.code){
+                    this.qh.name = optionQh.name;
+                    this.qhSelected = optionQh.name;
                 }
             });
         },
@@ -1472,6 +1584,14 @@ export default {
             this.optionsQg = this.initialOptionsQg;
             this.isShowOptionQg = !this.isShowOptionQg;      
         },
+        showDropDownContentTt(){
+            this.cities = this.initialCities;
+            this.isShowOptionTt = !this.isShowOptionTt;      
+        },
+        showDropDownContentQh(){
+            this.optionsQh = this.initialOptionsQh;
+            this.isShowOptionQh = !this.isShowOptionQh;      
+        },
 
        /**
         * Ẩn combobox
@@ -1491,6 +1611,12 @@ export default {
         },
         hideDropDownContentQg(){
             if(this.overClick == false) this.isShowOptionQg = false;
+        },
+        hideDropDownContentTt(){
+            if(this.overClick == false) this.isShowOptionTt = false;
+        },
+        hideDropDownContentQh(){
+            if(this.overClick == false) this.isShowOptionQh = false;
         },
 
         /**
@@ -1537,6 +1663,22 @@ export default {
             this.overClick = false;
             this.hideDropDownContentQg();
         },
+        chooseOptionTt(city){
+            //Gán giá trị được chọn cho id và tên phòng ban của employee
+            this.tt.code = city.code;
+            // this.employee.departmentName = option.name;
+            this.ttFormat(this.tt.code);
+            this.overClick = false;
+            this.hideDropDownContentTt();
+        },
+        chooseOptionQh(optionQh){
+            //Gán giá trị được chọn cho id và tên phòng ban của employee
+            this.qh.code = optionQh.code;
+            // this.employee.departmentName = option.name;
+            this.qhFormat(this.qh.code);
+            this.overClick = false;
+            this.hideDropDownContentQh();
+        },
 
         /**
          * Tìm kiếm ô input đơn vị so với các option data có sẵn từ combobox
@@ -1566,7 +1708,24 @@ export default {
         searchOptionQg(){
             this.optionsQg = this.initialOptionsQg.filter(optionQg => {
                 return (
-                    optionQg.name.toLowerCase().includes(this.qg.name.toLowerCase())
+                    // optionQg.name.toLowerCase().includes(this.qg.name.toLowerCase())
+                    optionQg.name.toLowerCase().includes(this.qgSelected.toLowerCase())
+                )
+            });
+        },
+        searchCity(){
+            this.cities = this.initialCities.filter(city => {
+                return (
+                    // optionQg.name.toLowerCase().includes(this.qg.name.toLowerCase())
+                    city.name.toLowerCase().includes(this.citySelected.toLowerCase())
+                )
+            });
+        },
+        searchOptionQh(){
+            this.optionsQh = this.initialOptionsQh.filter(optionQh => {
+                return (
+                    // optionQg.name.toLowerCase().includes(this.qg.name.toLowerCase())
+                    optionQh.name.toLowerCase().includes(this.qhSelected.toLowerCase())
                 )
             });
         },
