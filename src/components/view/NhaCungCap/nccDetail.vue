@@ -446,8 +446,8 @@
                                             <input type="text" class="department-blank-box" placeholder="Tỉnh / Thành phố" style="font-style: italic;"
                                                 @focus="showDropDownContentTt()" 
                                                 @blur="hideDropDownContentTt()"
-                                                @keyup="searchCity()"
-                                                v-model="citySelected"
+                                                @keyup="searchOptionTt()"
+                                                v-model="ttSelected"
                                             />
                                             <button id="dropdown-icon-1" 
                                                 @focus="showDropDownContentTt()" 
@@ -459,15 +459,15 @@
                                                 style="width: 194px; ; max-height: 130px; overflow-y: scroll; z-index: 1; margin-top: -5px;"
                                             >
                                                 <div class="dropdown-content-a" style="height: 34px;"
-                                                :class="{'drop-down-content-selected' : city.code == tt.code}"
-                                                v-for="city in cities" 
-                                                :key="city.code" 
-                                                @click="chooseOptionTt(city)" 
+                                                :class="{'drop-down-content-selected' : optionTt.code == tt.code}"
+                                                v-for="optionTt in optionsTt" 
+                                                :key="optionTt.code" 
+                                                @click="chooseOptionTt(optionTt)" 
                                                 @mouseenter="enterClick()" 
                                                 @mouseleave="leaveClick()"
                                                 >
                                                     <div class="line-options" style="cursor: pointer;">
-                                                        <span>{{city.name}} </span>
+                                                        <span>{{optionTt.name}} </span>
                                                     </div>                                            
                                                 </div>
                                             </div>
@@ -518,13 +518,13 @@
                                                     padding-right: 0px;
                                                     font-size: 13px;
                                                     height: 32px;
-                                                    margin-top: 5px;
-                                                    margin-bottom: 10px;"
+                                                    margin-top: -10px;
+                                                    margin-bottom: 15px;"
                                                     >
                                             <input type="text" class="department-blank-box" placeholder="Quận / Huyện" style="font-style: italic;"
                                                 @focus="showDropDownContentQh()" 
                                                 @blur="hideDropDownContentQh()"
-                                                @keyup="searchQh()"
+                                                @keyup="searchOptionQh()"
                                                 v-model="qhSelected"
                                             />
                                             <button id="dropdown-icon-1"
@@ -534,7 +534,7 @@
                                         </div> 
                                         <div id="dropdown">     
                                             <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionQh}" 
-                                                style="width: 194px; ; max-height: 130px; overflow-y: scroll; z-index: 1; margin-top: -5px;"
+                                                style="width: 194px; ; max-height: 125px; overflow-y: scroll; z-index: 1; margin-top: -15px;"
                                             >
                                                 <div class="dropdown-content-a" style="height: 34px;"
                                                 :class="{'drop-down-content-selected' : optionQh.code == qh.code}"
@@ -558,11 +558,37 @@
                                                     padding-right: 0px;
                                                     font-size: 13px;
                                                     height: 32px;
-                                                    margin-top: 5px;
-                                                    margin-bottom: 10px;"
+                                                    margin-top: -10px;
+                                                    margin-bottom: 15px;"
                                                     >
-                                            <input type="text" class="department-blank-box" placeholder="Xã / Phường" style="font-style: italic;"/>
-                                            <button id="dropdown-icon-1"></button>
+                                            <input type="text" class="department-blank-box" placeholder="Xã / Phường" style="font-style: italic;"
+                                                @focus="showDropDownContentXp()" 
+                                                @blur="hideDropDownContentXp()"
+                                                @keyup="searchOptionXp()"
+                                                v-model="xpSelected"
+                                            />
+                                            <button id="dropdown-icon-1"
+                                                @focus="showDropDownContentXp()" 
+                                                @blur="hideDropDownContentXp()"
+                                            ></button>
+                                        </div> 
+                                        <div id="dropdown">     
+                                            <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionXp}" 
+                                                style="width: 194px; ; max-height: 125px; overflow-y: scroll; z-index: 1; margin-top: -15px;"
+                                            >
+                                                <div class="dropdown-content-a" style="height: 34px;"
+                                                :class="{'drop-down-content-selected' : optionXp.code == xp.code}"
+                                                v-for="optionXp in optionsXp" 
+                                                :key="optionXp.code" 
+                                                @click="chooseOptionXp(optionXp)" 
+                                                @mouseenter="enterClick()" 
+                                                @mouseleave="leaveClick()"
+                                                >
+                                                    <div class="line-options" style="cursor: pointer;">
+                                                        <span>{{optionXp.name}} </span>
+                                                    </div>                                            
+                                                </div>
+                                            </div>
                                         </div> 
                                     </div>
                                 </div>
@@ -676,13 +702,13 @@ export default {
             },
             qgSelected: [],
             //Tỉnh / Thành
-            cities: [],
-            initialCities: [],
+            optionsTt: [],
+            initialOptionsTt: [],
             tt: {
                 code: null,
                 name: "",
             },
-            citySelected: [],
+            ttSelected: [],
             //Quận / Huyện
             optionsQh: [],
             initialOptionsQh: [],
@@ -691,6 +717,15 @@ export default {
                 name: "",
             },
             qhSelected: [],
+            //Xã / Phường
+            optionsXp: [],
+            initialOptionsXp: [],
+            tempXp: [], //hàm tạm để so sánh để lấy dữ liệu xã phường (do api nên phải nghĩ ra cách này)
+            xp: {
+                code: null,
+                name: "",
+            },
+            xpSelected: [],
 
             //Biến kiểm tra xem dữ liệu combobox có show ra hay không
             isShowOption: false,
@@ -700,6 +735,7 @@ export default {
             isShowOptionQg: false,
             isShowOptionTt: false,
             isShowOptionQh: false,
+            isShowOptionXp: false,
             //Option được chọn trong dropbox
             // selectedOption: {
             //     id: null,
@@ -1433,8 +1469,8 @@ export default {
                         "https://provinces.open-api.vn/api/p/"
                     )
                     .then((res) => {
-                        this.cities = res.data;
-                        console.log(this.cities);
+                        this.optionsTt = res.data;
+                        console.log(this.optionsTt);
                     })
                     .catch((res) => {
                         console.log(res);
@@ -1444,17 +1480,37 @@ export default {
                         "https://provinces.open-api.vn/api/p/"
                     )
                     .then((res) => {
-                        this.initialCities = res.data;
+                        this.initialOptionsTt = res.data;
                     })
                     .catch((res) => {
                         console.log(res);
                     })
             }
+            else{
+                //Khi chon Quoc gia khac Viet Nam thi phai set default tinh thanh, quan huyen, xa phuong
+                this.tt.code = null;
+                this.tt.name = null;
+                this.ttSelected = [];
+                this.optionsTt = [];
+                this.initialOptionsTt = [];
+
+                this.qh.code = null;
+                this.qh.name = null;
+                this.qhSelected = [];
+                this.optionsQh = [];
+                this.initialOptionsQh = [];
+
+                this.xp.code = null;
+                this.xp.name = null;
+                this.xpSelected = [];
+                this.optionsXp = [];
+                this.initialOptionsXp = [];
+            }
         },
         /**
          * Theo dõi sự thay đổi của combobox các tỉnh thành
          */
-        citySelected: function(valu){
+        ttSelected: function(valu){
             if(valu != null)
                 console.log( valu + " Quận / Huyện");
             console.log("Mã tỉnh thành: " + this.tt.code);
@@ -1465,6 +1521,20 @@ export default {
                     "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2"
                 )
                 .then((res) => {
+
+                    //Chọn một tỉnh thành khác cái thì combobox quận huyện với xã phưởng phải reset default
+                    this.qh.code = null;
+                    this.qh.name = null;
+                    this.qhSelected = [];
+                    this.optionsQh = [];
+                    this.initialOptionsQh = [];
+
+                    this.xp.code = null;
+                    this.xp.name = null;
+                    this.xpSelected = [];
+                    this.optionsXp = [];
+                    this.initialOptionsXp = [];
+
                     this.optionsQh = res.data.districts;
                     console.log(this.optionsQh);
                 })
@@ -1477,6 +1547,65 @@ export default {
                 )
                 .then((res) => {
                     this.initialOptionsQh = res.data.districts;
+                })
+                .catch((res) => {
+                    console.log(res);
+                })
+        },
+        /**
+         * Theo dõi thay đổi từ combobox Quận / Huyện để chạy sang Xã / Phường
+         */
+        qhSelected: function(valu){
+            if(valu != null)
+                console.log(valu + " Xã / Phường");
+            console.log("Mã Quận/Huyện: " + this.qh.code);
+            // console.log("https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=3");
+
+
+            axios
+                .get(
+                    "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=3"
+                )
+                .then((res) => {
+
+                    //Chọn quận huyện khác thì phải reset lại xã phường
+                    this.xp.code = null;
+                    this.xp.name = null;
+                    this.xpSelected = [];
+                    this.optionsXp = [];
+                    this.initialOptionsXp = [];
+
+                    //Xử lí để lấy dữ liệu theo đúng quận huyện (api trên mạng nên phải xử lí)
+                    this.tempXp = res.data.districts;
+                    console.log("tempXp:" + this.tempXp);
+                    for(var i=0; i<this.tempXp.length; i++){
+                        if(this.tempXp[i].code == this.qh.code){
+                            console.log("Mã quận/huyện: " + this.tempXp[i].code);
+                            // console.log(this.tempXp[i].wards);
+                            this.optionsXp = this.tempXp[i].wards;
+                            break;
+                        }
+                    }
+                    this.tempXp = [];
+                    console.log(this.optionsXp);
+                })
+                .catch((res) => {
+                    console.log(res);
+                })
+
+                axios
+                .get(
+                    "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=3"
+                )
+                .then((res) => {
+                    this.tempXp = res.data.districts;
+                    for(var i=0; i<this.tempXp.length; i++){
+                        if(this.tempXp[i].code == this.qh.code){
+                            this.initialOptionsXp = this.tempXp[i].wards;
+                            break;
+                        }
+                    }
+                    this.tempXp = [];
                 })
                 .catch((res) => {
                     console.log(res);
@@ -1540,10 +1669,10 @@ export default {
             });
         },
         ttFormat(ttCode){
-            this.cities.forEach(city => {
-                if(ttCode == city.code){
-                    this.tt.name = city.name;
-                    this.citySelected = city.name;
+            this.optionsTt.forEach(optionTt => {
+                if(ttCode == optionTt.code){
+                    this.tt.name = optionTt.name;
+                    this.ttSelected = optionTt.name;
                 }
             });
         },
@@ -1552,6 +1681,14 @@ export default {
                 if(qhCode == optionQh.code){
                     this.qh.name = optionQh.name;
                     this.qhSelected = optionQh.name;
+                }
+            });
+        },
+        xpFormat(xpCode){
+            this.optionsXp.forEach(optionXp => {
+                if(xpCode == optionXp.code){
+                    this.xp.name = optionXp.name;
+                    this.xpSelected = optionXp.name;
                 }
             });
         },
@@ -1620,12 +1757,16 @@ export default {
             this.isShowOptionQg = !this.isShowOptionQg;      
         },
         showDropDownContentTt(){
-            this.cities = this.initialCities;
+            this.optionsTt = this.initialOptionsTt;
             this.isShowOptionTt = !this.isShowOptionTt;      
         },
         showDropDownContentQh(){
             this.optionsQh = this.initialOptionsQh;
             this.isShowOptionQh = !this.isShowOptionQh;      
+        },
+        showDropDownContentXp(){
+            this.optionsXp = this.initialOptionsXp;
+            this.isShowOptionXp = !this.isShowOptionXp;      
         },
 
        /**
@@ -1652,6 +1793,9 @@ export default {
         },
         hideDropDownContentQh(){
             if(this.overClick == false) this.isShowOptionQh = false;
+        },
+        hideDropDownContentXp(){
+            if(this.overClick == false) this.isShowOptionXp = false;
         },
 
         /**
@@ -1698,9 +1842,9 @@ export default {
             this.overClick = false;
             this.hideDropDownContentQg();
         },
-        chooseOptionTt(city){
+        chooseOptionTt(optionTt){
             //Gán giá trị được chọn cho id và tên phòng ban của employee
-            this.tt.code = city.code;
+            this.tt.code = optionTt.code;
             // this.employee.departmentName = option.name;
             this.ttFormat(this.tt.code);
             this.overClick = false;
@@ -1713,6 +1857,14 @@ export default {
             this.qhFormat(this.qh.code);
             this.overClick = false;
             this.hideDropDownContentQh();
+        },
+        chooseOptionXp(optionXp){
+            //Gán giá trị được chọn cho id và tên phòng ban của employee
+            this.xp.code = optionXp.code;
+            // this.employee.departmentName = option.name;
+            this.xpFormat(this.xp.code);
+            this.overClick = false;
+            this.hideDropDownContentXp();
         },
 
         /**
@@ -1748,11 +1900,11 @@ export default {
                 )
             });
         },
-        searchCity(){
-            this.cities = this.initialCities.filter(city => {
+        searchOptionTt(){
+            this.optionsTt = this.initialOptionsTt.filter(optionTt => {
                 return (
                     // optionQg.name.toLowerCase().includes(this.qg.name.toLowerCase())
-                    city.name.toLowerCase().includes(this.citySelected.toLowerCase())
+                    optionTt.name.toLowerCase().includes(this.ttSelected.toLowerCase())
                 )
             });
         },
@@ -1761,6 +1913,14 @@ export default {
                 return (
                     // optionQg.name.toLowerCase().includes(this.qg.name.toLowerCase())
                     optionQh.name.toLowerCase().includes(this.qhSelected.toLowerCase())
+                )
+            });
+        },
+        searchOptionXp(){
+            this.optionsXp = this.initialOptionsXp.filter(optionXp => {
+                return (
+                    // optionQg.name.toLowerCase().includes(this.qg.name.toLowerCase())
+                    optionXp.name.toLowerCase().includes(this.xpSelected.toLowerCase())
                 )
             });
         },
