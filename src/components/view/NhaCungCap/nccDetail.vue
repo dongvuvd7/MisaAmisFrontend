@@ -1421,6 +1421,10 @@ export default {
     },
 
     watch: {
+        /**
+         * Theo dõi combobox Quốc gia, nếu có sự thay đổi thì chạy
+         * Chọn Việt Nam mới hiện danh sách các tình thành, các Quốc gia khác thì không
+         */
         qgSelected: function(valu){
             if(valu == "Việt Nam"){
                 console.log("Tỉnh / Thành");
@@ -1446,7 +1450,38 @@ export default {
                         console.log(res);
                     })
             }
-        }
+        },
+        /**
+         * Theo dõi sự thay đổi của combobox các tỉnh thành
+         */
+        citySelected: function(valu){
+            if(valu != null)
+                console.log( valu + " Quận / Huyện");
+            console.log("Mã tỉnh thành: " + this.tt.code);
+            // console.log("https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2");
+
+            axios
+                .get(
+                    "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2"
+                )
+                .then((res) => {
+                    this.optionsQh = res.data.districts;
+                    console.log(this.optionsQh);
+                })
+                .catch((res) => {
+                    console.log(res);
+                })
+            axios
+                .get(
+                    "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2"
+                )
+                .then((res) => {
+                    this.initialOptionsQh = res.data.districts;
+                })
+                .catch((res) => {
+                    console.log(res);
+                })
+        },
         
     },
 
