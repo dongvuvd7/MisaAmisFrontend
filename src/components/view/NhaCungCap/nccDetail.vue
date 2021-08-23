@@ -31,46 +31,47 @@
                         <div style="display: flex; align-items: center;">                          
                             <div style="width: 35%; margin-right: 2px">
                                 <div style="position: relative"><b>Mã số thuế</b>
-                                    <div class="error-message" v-show="isValid.fullNameMessage == false">Tên nhân viên không được để trống</div>
                                 </div>
                                 <input type="text" class="fullname-blank-box" 
-                                    :class="{'blank-box-invalid': isValid.fullName == false }" 
-                                    ref="employeeCode"
-                                    v-model="employee.fullName"
-                                    @mouseenter="mouseEnterError('fullName')"
-                                    @mouseleave="mouseLeaveError()"
+                                    ref="nccMst"
+                                    v-model="ncc.nccMst"
                                 />                    
                             </div>
                             <div style="width: 65%; margin-left: 2px">
                                 <div style="position: relative"><b>Mã nhà cung cấp</b> <span style="color: red;">*</span>
-                                    <div class="error-message" v-show="isValid.employeeCodeMessage == false">Mã nhân viên chưa hợp lệ</div>
+                                    <div class="error-message" v-show="isValid.nccCodeMessage == false">Mã nhà cung cấp chưa hợp lệ</div>
                                 </div>
                                 <input type="text" class="code-blank-box"
-                                    :class="{'blank-box-invalid': isValid.employeeCode == false}"
-                                    v-model="employee.employeeCode"
-                                    @mouseenter="mouseEnterError('employeeCode')"
+                                    :class="{'blank-box-invalid': isValid.nccCode == false}"
+                                    v-model="ncc.nccCode"
+                                    @mouseenter="mouseEnterError('nccCode')"
                                     @mouseleave="mouseLeaveError()"
                                 />
                             </div>
                         </div>
                         <div style="position: relative"><b>Tên nhà cung cấp</b><span style="color: red;">*</span>
-                            <div class="error-message" v-show="isValid.departmentNameMessage == false">Tên đơn vị chưa hợp lệ</div>
+                            <div class="error-message" v-show="isValid.nccNameMessage == false">Tên nhà cung cấp chưa hợp lệ</div>
                         </div>
-                        <input type="text" class="medium-blank-box" v-model="employee.jobTitle"/>
+                        <input type="text" class="medium-blank-box" 
+                            :class="{'blank-box-invalid': isValid.nccName == false}"
+                            v-model="ncc.nccName"
+                            @mouseenter="mouseEnterError('nccName')"
+                            @mouseleave="mouseLeaveError()"
+                        />
                         <div><b>Địa chỉ</b></div>
                         <textarea rows="2" type="text" class="medium-blank-box" style="height: 64px; font-size: 14px;" 
                             placeholder="VD: Số 82 Duy Tân, Dịch Vọng Hậu, Cầu Giấy, Hà Nội"
-                        v-model="employee.jobTitle"/>
+                        v-model="ncc.nccAddress"/>
                     </div>
                     <div class="column clm2">
                         <div style="display: flex; align-items: center">
                             <div style="width: 35%; margin-right: 2px;">
                                 <div><b>Điện thoại</b></div>
-                                <input type="text" class="fullname-blank-box" v-model="employee.phone" />                     
+                                <input type="text" class="fullname-blank-box" v-model="ncc.nccPhone" />                     
                             </div>
                             <div style="width: 65%; margin-left: 2px; padding-left: 6px;">
                                 <div><b>Website</b></div>
-                                <input type="text" class="fullname-blank-box"  /> 
+                                <input type="text" class="fullname-blank-box" v-model="ncc.nccWebsite"/> 
                             </div>
                         </div>
                         <div style="align-items: center;">
@@ -106,22 +107,20 @@
                                 </div>
                             </div> -->
 
-                            <div class="dropdown-text-and-icon" :class="{'blank-box-invalid': isValid.departmentName == false}">
+                            <div class="dropdown-text-and-icon">
                                 <input type="text" class="department-blank-box"  
                                 id="departmentName"
-                                v-model="employee.departmentName"
+                                v-model="ncc.nhomNcc"
                                 />
                                 <div class="icon-plus"></div>
                                 <button id="dropdown-icon"></button>
                             </div>
                         </div>
                         <div style="align-items: center;">
-                            <div style="width: 100%; margin-top: 15px;"><b>Nhân viên mua hàng</b> <span style="color: red;">*</span>
-                            </div>
+                            <div style="width: 100%; margin-top: 15px;"><b>Nhân viên mua hàng</b></div>
                             <!-- combobox -->
-                            <div class="dropdown-text-and-icon" :class="{'blank-box-invalid': isValid.departmentName == false}"
-                                style="margin-top: 3px;">
-                                <input type="text" class="department-blank-box" 
+                            <div class="dropdown-text-and-icon" style="margin-top: 3px;">
+                                <input type="text" class="department-blank-box" v-model="ncc.nvMuahang"
                                 />
                                 <div class="icon-plus"></div>
                                 <button id="dropdown-icon"></button>
@@ -210,26 +209,29 @@
 
                                     </div>
                                     <div style="width: calc(32% - 4px); margin-left: 2px">
-                                        <input style="margin-top: 21px; font-style: italic;" type="text" class="code-blank-box" placeholder="Họ và tên"/>
+                                        <input style="margin-top: 21px; font-style: italic;" type="text" class="code-blank-box" placeholder="Họ và tên"
+                                        v-model="ncc.nlhName"/>
                                     </div>
                                     <div style="width: 47%; margin-left: 3%;">
                                         <div style="position: relative"><b>Đại diện theo PL</b>
                                         </div>
-                                        <input type="text" class="fullname-blank-box" placeholder="Đại diện theo pháp luật" style="font-style: italic;"/>                    
+                                        <input type="text" class="fullname-blank-box" placeholder="Đại diện theo pháp luật" style="font-style: italic;"
+                                        v-model="ncc.nlhPhapluat"/>                    
                                     </div>
                                 </div>
                                 <input type="text" class="medium-blank-box" placeholder="Email"
                                     style="width: 47%; margin-left: 12px; font-style: italic; margin-top: -4px;"
+                                    v-model="ncc.nlhEmail"
                                 />
                                 <input type="text" class="medium-blank-box" placeholder="Số điện thoại"
                                     style="width: 47%; margin-left: 12px; font-style: italic; margin-top: -4px;"
+                                    v-model="ncc.nlhPhone"
                                 />
                             </div>
                             <div v-show="showTab == 2" class="infor-connetion">
                                 <div style="display: flex; align-items: center; width: 100%; margin-left: 12px; margin-top: 10px;">                          
                                     <div style="width: 22%; margin-right: 5px">
-                                        <div style="position: relative;"><b>Điều khoản thanh toán</b>
-                                        </div>
+                                        <div style="position: relative;"><b>Điều khoản thanh toán</b></div>
                                         <div class="dropdown-text-and-icon"
                                             style=" width: 100%;
                                                     padding: 6px 10px;
@@ -281,12 +283,12 @@
                                     <div style="width: 22%; margin-left: 5px">
                                         <div style="position: relative;"><b>Số ngày được nợ</b>
                                         </div>
-                                        <input style="font-style: italic;" type="text" class="code-blank-box"/>
+                                        <input style="font-style: italic;" type="text" class="code-blank-box" v-model="ncc.dkttSongay"/>
                                     </div>
                                     <div style="width: 22%; margin-left: 10px;">
                                         <div style="position: relative"><b>Số nợ tối đa</b>
                                         </div>
-                                        <input type="text" class="fullname-blank-box" style="font-style: italic;"/>                    
+                                        <input type="text" class="fullname-blank-box" style="font-style: italic;" v-model="ncc.dkttSono"/>                    
                                     </div>
                                 </div>
                                 <div style="position: relative; margin: 0 0 8px 12px;"><b>Tài khoản cồng nợ phải trả</b></div>
@@ -594,7 +596,7 @@
                                 </div>
                             </div>
                             <div v-show="showTab == 5" class="noteTab">
-                                <textarea name="" id="textFrame" cols="50" rows="5"></textarea>
+                                <textarea name="" id="textFrame" cols="50" rows="5" v-model="ncc.ghichu"></textarea>
                             </div>
                         </div>
                     </div>
@@ -639,30 +641,21 @@
     import ErrorDialog from '../../common/pop-up/errorDialog.vue';
     import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
 
-    const getAll = "https://localhost:44342/api/v1/Employees"
+    const getAll = "https://localhost:44342/api/v1/Nccs"
     const form = {
         add: "add",
         edit: "edit"
     }
     const errorMessage = {
-        invalidDepartment: "Tên đơn vị không tồn tại trong hệ thống, vui lòng kiểm tra lại.",
-        nullFullName: "Tên không được để trống.",
-        nullEmployeeCode: "Mã nhân viên không được để trống.",
-        nullDepartment: "Tên đơn vị không được để trống.",
+        nullNccName: "Tên không được để trống.",
+        nullNccCode: "Mã nhà cung cấp không được để trống.",
         dataChange: "Dữ liệu đã bị thay đổi. Bạn có muốn cất không?",
-
     }
     const property = {
-        fullName: "fullName",
-        employeeCode: "employeeCode",
-        departmentName: "departmentName",
+        nccName: "nccName",
+        nccCode: "nccCode",
+    }
 
-    }
-    const genderName = {
-        male: "Nam",
-        female: "Nữ",
-        rest: "Khác"
-    }
 
 export default {
     components: {
@@ -742,24 +735,6 @@ export default {
             //     name: null
             // },
             //Danh sách các lựa chọn
-            options: [
-                {
-                    id: "142cb08f-7c31-21fa-8e90-67245e8b283e",
-                    name: "Phòng Đào tạo"
-                },
-                {
-                    id: "17120d02-6ab5-3e43-18cb-66948daf6128",
-                    name: "Phòng Kế toán"
-                },
-                {
-                    id: "469b3ece-744a-45d5-957d-e8c757976496",
-                    name: "Phòng Marketing"
-                },
-                {
-                    id: "4e272fc4-7875-78d6-7d32-6a1673ffca7c",
-                    name: "Phòng Nhân sự"
-                },
-            ],
             optionsName: [
                 {
                     id: "1",
@@ -1061,24 +1036,6 @@ export default {
                 ],
 
             //Danh sách các lựa chọn ban đầu (không thay đổi)
-            initialOptions: [
-                {
-                    id: "142cb08f-7c31-21fa-8e90-67245e8b283e",
-                    name: "Phòng Đào tạo"
-                },
-                {
-                    id: "17120d02-6ab5-3e43-18cb-66948daf6128",
-                    name: "Phòng Kế toán"
-                },
-                {
-                    id: "469b3ece-744a-45d5-957d-e8c757976496",
-                    name: "Phòng Marketing"
-                },
-                {
-                    id: "4e272fc4-7875-78d6-7d32-6a1673ffca7c",
-                    name: "Phòng Nhân sự"
-                },
-            ],
             initialOptionsName: [
                 {
                     id: "1",
@@ -1383,17 +1340,13 @@ export default {
             overClick: false,
 
             isValid: {
-                employeeCode: true,
-                fullName: true,
-                departmentName: true,
-                employeeCodeMessage: true,
-                fullNameMessage: true,
-                departmentNameMessage: true,
+                nccCode: true,
+                nccName: true,
+                nccCodeMessage: true,
+                nccNameMessage: true,
 
-                phone: true,
-                telephone: true,
+                website: true,
                 email: true,
-
             },
 
             //Biển để hiện dialog thông báo trùng mã nhân viên
@@ -1401,7 +1354,7 @@ export default {
             //Biến để hiện pop-up thông báo trống mã hoặc tên
             isErrorPopUpShow: false,
             //Biến để nhận giá trị của employee truyền vào ban đầu, để so sánh sau khi thay đổi
-            initialEmployee: {},
+            initialNcc: {},
             //Biến để hiện thông báo đã có thay đổi dữ liệu
             isDataChange: false,
             //Biến để nhận thông báo lỗi trả về từ API
@@ -1432,7 +1385,7 @@ export default {
     },
 
     props: {
-        employee: {
+        ncc: {
             type: Object,
             default: null,
         },
@@ -1443,17 +1396,13 @@ export default {
     },
 
     updated(){
-        //Format giới tính sau khi dialog được hiện ra, để binding dữ liệu
-        this.genderFormat(this.employee.gender);
     },
 
     mounted() {
         //auto focus vào ô input employeeCode
         this.focusInput();
-
-        this.genderFormat(this.employee.gender);
-        //copy employee sang 1 object khac de so xem co su thay doi khong?
-        this.initialEmployee = {...this.employee};
+        //copy ncc sang 1 object khac de so xem co su thay doi khong?
+        this.initialNcc = {...this.ncc};
     },
 
     watch: {
@@ -1619,26 +1568,6 @@ export default {
          * Cụm hàm format
          * CreatedBy: VDDong (17/06/2021)
          */
-        //format giới tính để đưa dữ liệu lên database
-        genderFormat(gender){
-            if(gender == 0) {
-                this.employee.genderName = genderName.female;
-            }
-            else if(gender == 1) {
-                this.employee.genderName = genderName.male;
-            }
-            else if(gender == 2){
-                this.employee.genderName = genderName.rest;
-            }
-        },
-        //Format tên phòng ban để binding vào form
-        departmentFormat(departmentId){
-            this.options.forEach(option => {
-                    if(departmentId == option.id) {
-                        this.employee.departmentName = option.name;
-                    }
-                });
-        },
         danhXungFormat(danhXungId){
             this.optionsName.forEach(optionName => {
                 if(danhXungId == optionName.id){
@@ -1706,15 +1635,14 @@ export default {
         },
 
         /**
-         * Ẩn dialog EmployeeDetail
+         * Ẩn dialog nccDetail
          * CreatedBy: VDDong (17/06/2021)
          */
         hideDialog(){
             //Reset lại các biến validate form
-            this.isValid.fullName = true;
-            this.isValid.employeeCode = true;
-            this.isValid.departmentName = true;
-            //Gọi phương thức ẩn của thằng cha là employeeList
+            this.isValid.nccName = true;
+            this.isValid.nccCode = true;
+            //Gọi phương thức ẩn của thằng cha là nccList
             this.$emit('hideDialog');
         },
 
@@ -1724,7 +1652,7 @@ export default {
         * CreatedBy: VDDong (17/06/2021)
         */
         hideDialogDataCondition(){
-           if(this.compareDataObject(this.initialEmployee, this.employee)){
+           if(this.compareDataObject(this.initialNcc, this.ncc)){
                this.isDataChange = true;
                this.errorMsg = errorMessage.dataChange;
            }
@@ -1735,11 +1663,6 @@ export default {
         * Hiện combobox
         * CreatedBy: VDDong (17/06/2021)
         */
-        showDropDownContent(){
-            this.options = this.initialOptions;
-            this.isShowOption = !this.isShowOption;      
-            
-        },
         showDropDownContentName(){
             this.optionsName = this.initialOptionsName;
             this.isShowOptionName = !this.isShowOptionName;      
@@ -1773,9 +1696,6 @@ export default {
         * Ẩn combobox
         * CreatedBy: VDDong (17/06/2021)
         */
-        hideDropDownContent(){
-            if(this.overClick == false) this.isShowOption = false;
-        },
         hideDropDownContentName(){
             if(this.overClick == false) this.isShowOptionName = false;
         },
@@ -1802,14 +1722,6 @@ export default {
         * Gán dữ liệu đã chọn từ combobox cho chủ thể employee và format cho đúng định dạng
         * CreatedBy: VDDong (17/06/2021)
         */
-        chooseOption(option){
-            //Gán giá trị được chọn cho id và tên phòng ban của employee
-            this.employee.departmentId = option.id;
-            // this.employee.departmentName = option.name;
-            this.departmentFormat(this.employee.departmentId);
-            this.overClick = false;
-            this.hideDropDownContent();
-        },
         chooseOptionName(optionName){
             //Gán giá trị được chọn cho id và tên phòng ban của employee
             this.danhXung.id = optionName.id;
@@ -1871,13 +1783,6 @@ export default {
          * Tìm kiếm ô input đơn vị so với các option data có sẵn từ combobox
          * CreatedBy: VDDong (17/06/2021)
          */
-        searchOption(){
-            this.options = this.initialOptions.filter(option => {
-                return (
-                    option.name.toLowerCase().includes(this.employee.departmentName.toLowerCase())
-                )
-            });
-        },
         searchOptionName(){
             this.optionsName = this.initialOptionsName.filter(optionName => {
                 return (
@@ -1944,7 +1849,7 @@ export default {
          * CreatedBy: VDDong (17/06/2021)
          */
         focusInput(){
-            this.$refs.employeeCode.focus();
+            this.$refs.nccMst.focus();
         },
 
         /**
@@ -1954,56 +1859,25 @@ export default {
         nullValidation(propertyValue, propertyName){
             propertyValue = propertyValue || '';
             if (propertyValue.trim() == "") {
-                if(propertyName == property.employeeCode) {
-                    this.isValid.employeeCode = false;
+                if(propertyName == property.nccCode) {
+                    this.isValid.nccCode = false;
                     this.isErrorPopUpShow = true;
-                    this.errorMsg = errorMessage.nullEmployeeCode;
+                    this.errorMsg = errorMessage.nullNccCode;
                 }
-                else if(propertyName == property.fullName) {
-                    this.isValid.fullName = false;
+                else if(propertyName == property.nccName) {
+                    this.isValid.nccName = false;
                     this.isErrorPopUpShow = true;
-                    this.errorMsg = errorMessage.nullFullName;
+                    this.errorMsg = errorMessage.nullNccName;
                 }
             } 
             else{
-                if(propertyName == property.employeeCode) {
-                    this.isValid.employeeCode = true;
+                if(propertyName == property.nccCode) {
+                    this.isValid.nccCode = true;
                 }
-                else if(propertyName == property.fullName) {
-                    this.isValid.fullName = true;
+                else if(propertyName == property.nccName) {
+                    this.isValid.nccName = true;
                 }
             }    
-        },
-
-        /**
-         * Validate tên đơn vị (phòng ban)
-         * CreatedBy: VDDong (17/06/2021)
-         */
-        departmentNameValidation(value){
-            //Validate tên đơn vị không được trống
-            value = value || '';
-            if (value.trim() == "") {
-                this.isValid.departmentName = false;
-                this.isErrorPopUpShow = true;
-                this.errorMsg = errorMessage.nullDepartment;
-            }
-            else {
-                this.isValid.departmentName = false;
-                //Validate tên đơn vị giống với tên đơn vị trong option
-                //Kiểm tra xem thông tin nhập vào có đúng với các option tên đơn vị không
-                this.options.forEach(option => {
-                    if(option.name == value) {
-                        this.isValid.departmentName = true;
-                        this.employee.departmentId = option.id;
-                    }
-                });
-                if(this.isValid.departmentName == false) 
-                {
-                    this.isErrorPopUpShow = false;
-                    this.isErrorDialogShow = true;
-                    this.errorMsg = errorMessage.invalidDepartment;
-                }
-            }
         },
 
         /**
@@ -2011,15 +1885,12 @@ export default {
          * CreatedBy: VDDong (17/06/2021)
          */
         formValidation(){
-            //Validate tên nhân viên không được trống hoặc là khoảng trắng
-            this.nullValidation(this.employee.fullName, property.fullName);
-            //Validate mã nhân viên không được trống hoặc là khoảng trắng
-            this.nullValidation(this.employee.employeeCode, property.employeeCode);
-            //Validate tên đơn vị
-            this.departmentNameValidation(this.employee.departmentName);
-            if(this.isValid.fullName == true
-                && this.isValid.employeeCode == true
-                && this.isValid.departmentName == true
+            //Validate tên nhà cung cấp không được trống hoặc là khoảng trắng
+            this.nullValidation(this.ncc.nccName, property.nccName);
+            //Validate mã nhà cung cấp không được trống hoặc là khoảng trắng
+            this.nullValidation(this.ncc.nccCode, property.nccCode);
+            if(this.isValid.nccName == true
+                && this.isValid.nccCode == true
             ) this.isAppropriate = true;
             else this.isAppropriate = false;         
         },
@@ -2046,23 +1917,19 @@ export default {
          */
         //Di chuyển chuột vào trong hiện lỗi
         mouseEnterError(propertyName){
-            if( this.isValid.employeeCode == false && propertyName == property.employeeCode){
-                this.isValid.employeeCodeMessage = false;
+            if( this.isValid.nccCode == false && propertyName == property.nccCode){
+                this.isValid.nccCodeMessage = false;
             }
-            else if( this.isValid.fullName == false && propertyName == property.fullName){
-                this.isValid.fullNameMessage = false;
-            }
-            if( this.isValid.departmentName == false && propertyName == property.departmentName) 
-                this.isValid.departmentNameMessage = false;
-            
+            if( this.isValid.nccName == false && propertyName == property.nccName){
+                this.isValid.nccNameMessage = false;
+            }         
         },
         //Di chuyển chuột ra ngoài ẩn lỗi
         mouseLeaveError(){
-            this.isValid.employeeCodeMessage = true;
-            this.isValid.fullNameMessage = true;
-            this.isValid.departmentNameMessage = true;
-
-            this.isValid.questionMessage = true;
+            this.isValid.nccCodeMessage = true;
+            this.isValid.nccNameMessage = true;
+            
+            // this.isValid.questionMessage = true;
         },
 
         /**
@@ -2070,7 +1937,7 @@ export default {
          * CreatedBy: VDDong (17/06/2021)
          */
         resetEmployee(){
-            this.$emit('showEmployeeDialog');
+            this.$emit('showNccDialog');
             this.focusInput();
         },
 

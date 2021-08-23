@@ -6,7 +6,7 @@
                 <router-link class="back-title" tag="span" to="/quytrinh" style="cursor: pointer;"> <i class="fas fa-chevron-left">
                   </i> Tất cả danh mục</router-link>
                 <div class="btn-wrapper">
-                    <button id="btn-add" @click="showEmployeeDialog()">
+                    <button id="btn-add" @click="showNccDialog()">
                         <span style="margin-right: 10px; font-weight: bold;">Thêm</span> | <i class="fas fa-caret-down" style="margin-left: 15px;"></i>
                     </button>
                 </div>
@@ -95,20 +95,20 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="employee in employees" :key="employee.employeeId">
+                                    <tr v-for="ncc in nccs" :key="ncc.nccId">
                                         <td>
                                             <input
                                                 type="checkbox"
                                                 v-model="checked"
-                                                :value="employee.employeeId"
+                                                :value="ncc.nccId"
                                             />
                                         </td>
-                                        <td>{{ employee.fullName }}</td>
-                                        <td>{{ employee.employeeCode }}</td>                 
-                                        <td>{{ employee.address }}</td>
-                                        <td>{{ employee.bankAccount }}</td>
-                                        <td>{{ employee.phone }}</td>
-                                        <td>{{ employee.identityNumber }}</td>
+                                        <td>{{ ncc.nccName }}</td>
+                                        <td>{{ ncc.nccCode }}</td>                 
+                                        <td>{{ ncc.nccAddress}}</td>
+                                        <td>{{ ncc.nccMst }}</td>
+                                        <td>{{ ncc.nccPhone }}</td>
+                                        <td>{{ ncc.nccWebsite }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -119,12 +119,12 @@
                                     </tr>
                                 </thead>
                                 <tbody style="background-color: #fff">
-                                    <tr v-for="employee in employees" :key="employee.employeeId" style="background: white border: 1px solid #ccc;">
+                                    <tr v-for="ncc in nccs" :key="ncc.nccId" style="background: white border: 1px solid #ccc;">
                                         <td>
-                                            <Option 
-                                                @showDeleteDialog="showDeleteDialog(employee.employeeId)"
-                                                @showEmployeeDetail="showEmployeeDetail(employee.employeeId)"
-                                                @showEmployeeDuplicate="showEmployeeDuplicate(employee.employeeId)"
+                                            <OptionNcc 
+                                                @showDeleteDialog="showDeleteDialog(ncc.nccId)"
+                                                @showNccDetail="showNccDetail(ncc.nccId)"
+                                                @showNccDuplicate="showNccDuplicate(ncc.nccId)"
                                                 @showStopUsingDialog="showStopUsingDialog"
                                             />
                                         </td>
@@ -136,7 +136,7 @@
 
                     <div id="footer">
                         <div id="total-data">
-                            Tổng số <b>{{this.employeeNumber}}</b> bản ghi
+                            Tổng số <b>{{this.nccNumber}}</b> bản ghi
                         </div>
                         <div id="footer-right">
                             <div id="footer-2">
@@ -156,21 +156,21 @@
             </div>
         </div>
         <NCCDetail 
-            v-if="isShowDialogEmployee"
+            v-if="isShowDialogNcc"
             @hideDialog="hideDialog"
-            :employee="selectedEmployee"
+            :ncc="selectedNcc"
             :formmode="formmode"
-            @showEmployeeDialog="showEmployeeDialog"
+            @showNccDialog="showNccDialog"
         />
-        <EmployeeDelete
+        <!-- <NccDelete
         :isShow="isShowDialogDelete"
         @hideDialog="hideDialog"
-        :employee="selectedEmployee"
+        :ncc="selectedNcc"
         />
-        <EmployeeStopUsing 
+        <NccStopUsing 
         :isShow="isShowDialogStopUsing"
         @hideDialog="hideDialog"
-        />
+        /> -->
 
         <!--loading -->
         <div class="fa-3x" v-if="isBusy">
@@ -185,59 +185,51 @@
 <script>
 //import
 import axios from  "axios";
-import Option from "../../common/option.vue";
+import OptionNcc from "../../common/optionNcc.vue";
 import ComboBox from "../../common/comboBox.vue";
 import Paging from "../../common/paging.vue";
 // import EmployeeDetail from "../employee/employeeDetail.vue";
-import EmployeeDelete from "../employee/employeeDelete.vue";
-import EmployeeStopUsing from '../employee/employeeStopUsing.vue';
+// import EmployeeDelete from "../employee/employeeDelete.vue";
+// import EmployeeStopUsing from '../employee/employeeStopUsing.vue';
 import NCCDetail from '../NhaCungCap/nccDetail.vue';
 
 // khai báo biến cố định, code cho nhanh
-const getAll = "https://localhost:44342/api/v1/Employees";
-const getMaxCode = "https://localhost:44342/api/v1/Employees/MaxCode";
-const getExport = "https://localhost:44342/api/v1/Employees/Export";
-const getDepartments = "https://localhost:44342/api/v1/Employees/Department";
-const getFilter = "https://localhost:44342/api/v1/Employees/Filter?";
-const gender = {
-    male: "Nam",
-    female: "Nữ",
-    rest: "Khác",
-}
+const getAll = "https://localhost:44342/api/v1/Nccs";
+const getMaxCode = "https://localhost:44342/api/v1/Nccs/MaxCode";
+const getExport = "https://localhost:44342/api/v1/Nccs/Export";
+const getFilter = "https://localhost:44342/api/v1/Nccs/Filter?";
+
 const form = {
     add: "add",
     edit: "edit",
 }
 export default {
   components: {
-      Option,
+      OptionNcc,
       ComboBox,
       Paging,
-      // EmployeeDetail,
-      EmployeeDelete,
-      EmployeeStopUsing,
+      // EmployeeDelete,
+      // EmployeeStopUsing,
       NCCDetail,
   },
 
   data() {
       return {
-            initialEmployees: [], //Data đầu vào cho api get all
-            employees: [], //data lấy vào khi get để gán dữ liệu lên table
-            employeeNumber: 0,  //tổng số bản ghi
-            departments: [], //data đơn vị (phòng ban)
-            isShowDialogEmployee: false, //biến đóng/mở dialog thêm sửa
+            initialNccs: [], //Data đầu vào cho api get all
+            nccs: [], //data lấy vào khi get để gán dữ liệu lên table
+            nccNumber: 0,  //tổng số bản ghi
+            isShowDialogNcc: false, //biến đóng/mở dialog thêm sửa
             isShowDialogDelete: false, // biến đóng/mở dialog xóa
             isShowDialogStopUsing: false, //biến đóng/mở dialog ngưng sử dụng
             message: null, //tiêu chí tìm kiếm
-            selectedEmployee: {}, //nhân viên được chọn
+            selectedNcc: {}, //nhân viên được chọn
             checked: [], //danh sách được tích vào checkbox
             currentPage: 0, //trang hiện tại
             perPage: 0, //số bản ghi trên 1 trang
             totalPage: 0, //tổng số trang
             isBusy: true, //loading animation, kiểm tra đã load dữ liệu xong chưa
             formmode: "", //phân biệt giữa sửa và thêm
-
-            isShowStat : false,
+            isShowStat : false, //đóng/mở bảng stat bên trên table
       }
   },
 
@@ -251,15 +243,13 @@ export default {
         )
         .then((res) => {
             console.log(res);
-            this.employees = res.data.data;
-            this.genderFormat(this.employees);
-            this.departmentsFormat(this.employees);
-            this.employeeNumber = res.data.totalRecord;
-            if(this.employeeNumber % this.perPage == 0){
-                this.totalPage = this.employeeNumber/this.perPage;
+            this.nccs = res.data.data;
+            this.nccNumber = res.data.totalRecord;
+            if(this.nccNumber % this.perPage == 0){
+                this.totalPage = this.nccNumber/this.perPage;
             }
             else {
-                this.totalPage = Math.floor(this.employeeNumber / this.perPage) + 1;
+                this.totalPage = Math.floor(this.nccNumber / this.perPage) + 1;
             }
             //loading data succesful
             this.isBusy = false;
@@ -268,9 +258,9 @@ export default {
             console.log(res);
         })
         
-        axios.get(getAll)
+      axios.get(getAll)
         .then((res) => {
-            this.initialEmployees = res.data;
+            this.initialNccs = res.data;
         })
         .catch((res) => {
             console.log(res);
@@ -294,7 +284,7 @@ export default {
           axios
           .get(getAll)
           .then((res) => {
-              this.initialEmployees = res.data;
+              this.initialNccs = res.data;
           })
           .catch((res) => {
               console.log(res);
@@ -308,35 +298,34 @@ export default {
           this.isBusy = true;
           this.message  = "";
           axios
-        .get(
-            getFilter + "pageSize=" + this.perPage + "&" + "pageIndex=" + this.currentPage + "&" + "filter=" + this.message
-        )
-        .then((res) => {
-            console.log(res);
-            this.employees = res.data.data;
-            this.genderFormat(this.employees);
-            this.departmentsFormat(this.employees);
-            this.employeeNumber = res.data.totalRecord;
-            if(this.employeeNumber % this.perPage == 0){
-                this.totalPage = this.employeeNumber/this.perPage;
-            }
-            else {
-                this.totalPage = Math.floor(this.employeeNumber / this.perPage) + 1;
-            }
-            //loading data succesful
-            this.isBusy = false;
-        })
-        .catch((res) => {
-            console.log(res);
-        })
+            .get(
+                getFilter + "pageSize=" + this.perPage + "&" + "pageIndex=" + this.currentPage + "&" + "filter=" + this.message
+            )
+            .then((res) => {
+                console.log(res);
+                this.nccs = res.data.data;
+                this.nccNumber = res.data.totalRecord;
+                if(this.nccNumber % this.perPage == 0){
+                    this.totalPage = this.nccNumber/this.perPage;
+                }
+                else {
+                    this.totalPage = Math.floor(this.nccNumber / this.perPage) + 1;
+                }
+                //loading data succesful
+                this.isBusy = false;
+            })
+            .catch((res) => {
+                console.log(res);
+            })
         
-        axios.get(getAll)
-        .then((res) => {
-            this.initialEmployees = res.data;
-        })
-        .catch((res) => {
-            console.log(res);
-        })
+        axios
+          .get(getAll)
+          .then((res) => {
+              this.initialNccs = res.data;
+          })
+          .catch((res) => {
+              console.log(res);
+          })
 
         this.getAllData();
       },
@@ -356,33 +345,28 @@ export default {
      * cụm hàm đóng / mở dialog
      */
     //hiện dialog thêm
-    showEmployeeDialog(){
+    showNccDialog(){
         axios
             .get(getMaxCode)
             .then((res) => {
-                this.isShowDialogEmployee = true;
+                this.isShowDialogNcc = true;
                 this.formmode = form.add;
-                this.selectedEmployee = {};
-                this.selectedEmployee.employeeCode = res.data;
+                this.selectedNcc = {};
+                this.selectedNcc.nccCode = res.data;
             })
             .catch((res) => {
                 console.log(res);
             })
     },
     //hiện dialog sửa
-    showEmployeeDetail(employeeId){
-        //get data employee to edit
+    showNccDetail(nccId){
+        //get data ncc to edit
         return axios
-                .get(getAll + "/" + employeeId)
+                .get(getAll + "/" + nccId)
                 .then((res) => {
-                    this.isShowDialogEmployee = true;
+                    this.isShowDialogNcc = true;
                     this.formmode = form.edit;
-                    this.selectedEmployee = res.data;
-                    
-                    this.departments.forEach((department) => {
-                        if(this.selectedEmployee.departmentId == department.departmentId)
-                            this.selectedEmployee.departmentName = department.departmentName;
-                    });
+                    this.selectedNcc = res.data;           
 
                     return Promise.resolve(); //resolve là hàm sẽ được gọi khi promise hoàn thành
                 })
@@ -393,27 +377,27 @@ export default {
 
     },
     //hiện dialog nhân bản
-      showEmployeeDuplicate(employeeId){
-        this.showEmployeeDetail(employeeId).then(() => 
-          axios
-            .get(getMaxCode)
-            .then((res) => {
-              this.selectedEmployee.employeeCode = res.data;
-              this.formmode = form.add;
-            })
-            .catch((res) => {
-              console.log(res);
-            })
+      showNccDuplicate(nccId){
+        this.showNccDetail(nccId).then(() => 
+        axios
+          .get(getMaxCode)
+          .then((res) => {
+            this.selectedNcc.nccCode = res.data;
+            this.formmode = form.add;
+          })
+          .catch((res) => {
+            console.log(res);
+          })
         )
       },
       //hiện dialog xác nhận xóa
-      showDeleteDialog(employeeId){
+      showDeleteDialog(nccId){
         this.isShowDialogDelete = true;
-        //Lấy data của nhân viên muốn xóa
+        //Lấy data của nhà cung cấp muốn xóa
         axios
-          .get(getAll +"/" + employeeId)
+          .get(getAll +"/" + nccId)
           .then((res) => {
-            this.selectedEmployee = res.data;
+            this.selectedNcc = res.data;
           })
           .catch((res) => {
             console.log(res);
@@ -425,7 +409,7 @@ export default {
       },
       //ẩn dialog thêm và xóa
       hideDialog(){
-        this.isShowDialogEmployee = false;
+        this.isShowDialogNcc = false;
         this.isShowDialogDelete = false;
         this.isShowDialogStopUsing = false;
         this.loadData();
@@ -442,64 +426,19 @@ export default {
           )
           .then((res) => {
             console.log(res);
-            this.employees = res.data.data;
+            this.nccs = res.data.data;
 
-            //format gender and department
-            this.genderFormat(this.employees);
-            this.departmentsFormat(this.employees);
             //Số lượng bản ghi hợp lệ
-            this.employeeNumber = res.data.totalRecord;
-            if (this.employeeNumber % this.perPage == 0) {
-              this.totalPage = this.employeeNumber / this.perPage;
+            this.nccNumber = res.data.totalRecord;
+            if (this.nccNumber % this.perPage == 0) {
+              this.totalPage = this.nccNumber / this.perPage;
             } else {
-              this.totalPage = Math.floor(this.employeeNumber / this.perPage) + 1;
+              this.totalPage = Math.floor(this.nccNumber / this.perPage) + 1;
             }
           })
           .catch((res) => {
             console.log(res);
           })
-      },
-
-      /**
-       * Cụm hàm format
-       * CreatedBy: VDDong(14/06/2021)
-       */
-      //format date of birth
-      dateFormat(dateOfBirth) {
-        var newDate = new Date(dateOfBirth);
-        var stringDate = newDate.getDate();
-        if (stringDate < 10) stringDate = "0" + stringDate;
-        var stringMonth = newDate.getMonth() + 1;
-        if (stringMonth < 10) stringMonth = "0" + stringMonth;
-        var stringYear = newDate.getFullYear();
-        return stringDate + "/" + stringMonth + "/" + stringYear;
-      },
-      //format giới tính
-      genderFormat(array) {
-        array.forEach((element) => {
-          if (element.gender == 0) element.genderName = gender.female;
-          else if (element.gender == 1) element.genderName = gender.male;
-          else element.genderName = gender.rest;
-        });
-      },
-      //format tên phòng ban
-      departmentsFormat(array) {
-        //Lấy tất cả dữ liệu phòng ban từ database
-        axios
-          .get(getDepartments)
-          .then((res) => {
-            this.departments = res.data;
-            //Gán giá trị departmentName của từng nhân viên với id tương ứng trong dữ liệu phòng ban trả về từ api
-            array.forEach((element) => {
-              this.departments.forEach((department) => {
-                if (element.departmentId == department.departmentId)
-                  element.departmentName = department.departmentName;
-              });
-            });
-          })
-          .catch((res) => {
-            console.log(res);
-          });
       },
 
       /**
@@ -514,10 +453,10 @@ export default {
        * Thay đổi số trang, thay đổi currentPage
        */
       onPageChange(page){
-        if (this.employeeNumber % this.perPage == 0) {
-        this.totalPage = this.employeeNumber / this.perPage;
+        if (this.nccNumber % this.perPage == 0) {
+        this.totalPage = this.nccNumber / this.perPage;
         } else {
-        this.totalPage = Math.floor(this.employeeNumber / this.perPage) + 1;
+        this.totalPage = Math.floor(this.nccNumber / this.perPage) + 1;
         }
         if(page > 0 && page <= this.totalPage){
             this.currentPage = page;
@@ -533,14 +472,11 @@ export default {
                                 this.message
                 )
                 .then((res) => {
-                console.log(res);
-                this.employees = res.data.data;
+                  console.log(res);
+                  this.nccs = res.data.data;
 
-                //format gender and department
-                this.genderFormat(this.employees);
-                this.departmentsFormat(this.employees);
-                //Số lượng bản ghi hợp lệ 
-                this.employeeNumber = res.data.totalRecord;
+                  //Số lượng bản ghi hợp lệ 
+                  this.nccNumber = res.data.totalRecord;
                 })
                 .catch((res) => {
                     console.log(res);
@@ -567,13 +503,13 @@ export default {
        */
       checkAll: {
         get: function() {
-          return this.initialEmployees ? this.checked.length == this.employeeNumber : false;
+          return this.initialNccs ? this.checked.length == this.nccNumber : false;
         },
         set: function(value) {
           var checked = [];
           if(value) {
-            this.initialEmployees.forEach(function (employee) {
-              checked.push(employee.employeeId);
+            this.initialNccs.forEach(function (ncc) {
+              checked.push(ncc.nccId);
             });
           }
           this.checked = checked;
