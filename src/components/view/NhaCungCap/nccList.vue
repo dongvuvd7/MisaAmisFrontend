@@ -162,15 +162,15 @@
             :formmode="formmode"
             @showNccDialog="showNccDialog"
         />
-        <!-- <NccDelete
+        <NccDelete
         :isShow="isShowDialogDelete"
         @hideDialog="hideDialog"
         :ncc="selectedNcc"
         />
         <NccStopUsing 
-        :isShow="isShowDialogStopUsing"
-        @hideDialog="hideDialog"
-        /> -->
+          :isShow="isShowDialogStopUsing"
+          @hideDialog="hideDialog"
+        />
 
         <!--loading -->
         <div class="fa-3x" v-if="isBusy">
@@ -188,9 +188,8 @@ import axios from  "axios";
 import OptionNcc from "../../common/optionNcc.vue";
 import ComboBox from "../../common/comboBox.vue";
 import Paging from "../../common/paging.vue";
-// import EmployeeDetail from "../employee/employeeDetail.vue";
-// import EmployeeDelete from "../employee/employeeDelete.vue";
-// import EmployeeStopUsing from '../employee/employeeStopUsing.vue';
+import NccDelete from "../NhaCungCap/nccDelete.vue";
+import NccStopUsing from '../NhaCungCap/nccStopUsing.vue';
 import NCCDetail from '../NhaCungCap/nccDetail.vue';
 
 // khai báo biến cố định, code cho nhanh
@@ -208,8 +207,8 @@ export default {
       OptionNcc,
       ComboBox,
       Paging,
-      // EmployeeDelete,
-      // EmployeeStopUsing,
+      NccDelete,
+      NccStopUsing,
       NCCDetail,
   },
 
