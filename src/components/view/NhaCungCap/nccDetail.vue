@@ -244,7 +244,7 @@
                                                 @focus="showDropDownContentDktt()" 
                                                 @blur="hideDropDownContentDktt()"
                                                 @keyup="searchOptionDktt()"
-                                                v-model="dktt.name"
+                                                v-model="dktt.id"
                                             />
                                             <div class="icon-plus" style="margin-right: 8px;"
                                                 @focus="showDropDownContentDktt()" 
@@ -347,7 +347,7 @@
                                         <th></th>
                                     </tr>
                                     </thead>
-                                    <tbody v-for="(bank, index) in banksOfEmployee" :key="index" >
+                                    <tbody v-for="(bank, index) in banksOfNcc" :key="index" >
                                     <tr>
                                         <td>
                                         <input
@@ -362,13 +362,13 @@
                                             type="text"
                                             style="width: 170px"
                                             class="input-tab-table"
-                                            v-model="bank.nameBank"
+                                            v-model="bank.bankName"
                                         />
                                         </td>
                                         <td><input type="text"  class="input-tab-table" style="width: 210px" 
-                                            v-model="bank.branchBank" /></td>
+                                            v-model="bank.bankBranch" /></td>
                                         <td><input type="text"  class="input-tab-table" style="width: 200px;"
-                                            v-model="bank.addressBank"/></td>
+                                            v-model="bank.bankPlace"/></td>
                                         <td
                                         class="delete-img delete-fea"
                                         @click="deleteBank(index)"
@@ -476,7 +476,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="rightTab4">
+                                <div class="rightTab4" style="height:  200px; overflow: scroll">
                                     <div class="rt4-header">
                                         <b style="margin-right: 20px; margin-top: 4px;">Địa chỉ giao hàng</b>
                                         <input type="checkbox" class="btn-check" style="margin-left: 15px;"/>
@@ -642,6 +642,8 @@
     import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
 
     const getAll = "https://localhost:44342/api/v1/Nccs"
+    const getBankNccByUserId = "https://localhost:44342/api/v1/Nccs/GetAllBankNccByUserId/"
+
     const form = {
         add: "add",
         edit: "edit"
@@ -666,7 +668,40 @@ export default {
     },
 
     created() {
-        this.banksOfEmployee.push(this.bank);
+        this.banksOfNcc.push(this.bank); //auto có 1 hàng bank ban đầu
+
+        //format combobox before edit
+        //Khi bind dữ liệu từ table lên dialog, phần combobox nếu muốn bôi xanh vào dữ liệu từ trước thì phải gán cho nó theo id
+        //ở dktt và tkcn phần create đã gán theo id luôn rồi nên chạy ok, còn phần danhXung thì chưa biết cách gánn id cho nó kiểu gì
+        this.danhXung.name = this.ncc.nlhXungho;
+        this.dktt.id = this.ncc.dkttMa;
+        this.tkcn.id = this.ncc.tkcnMa;
+
+        //tab ngân hàng, gọi các nhân hàng ra rồi bind lên table
+        axios
+            .get(getBankNccByUserId + this.ncc.nccId)
+            .then((res) => {
+                this.banksOfNcc = res.data;
+                console.log(res);
+            })
+            .catch((res) => {
+                console.log(res);
+            })
+
+        //tab4, địa chỉ khác
+        //phần này đáng ra ở database phải tạo table mới như BankNcc rồi làm giống vậy, nhưng lười nên làm 
+        //thành 1 thuộc tính của bảng Ncc luôn -> khi post mới lên mà có nhiều địa chỉ khác 
+        //thì phải lấy cái dòng cuối cùng (dcghs[dcghs.length - 1])
+        var tempDcgh = {
+            diachigh: this.ncc.dcgh
+        }
+        this.dcghs.push(tempDcgh);
+
+        this.qgSelected = this.ncc.DckQg;
+        this.ttSelected = this.ncc.DckTt;
+        this.qhSelected = this.ncc.DckQh;
+        this.xpSelected = this.ncc.DckXp;
+
     },
 
     data() {
@@ -1367,12 +1402,12 @@ export default {
             showTab: 1,
 
             //data tab bank (tab 3)
-            banksOfEmployee: [],
-            bank: {
+            banksOfNcc: [],
+            bank: { //các thuộc tính phải trùng tên các thuộc tính database
                 bankCode: "",
-                nameBank: "",
-                branchBank: "",
-                addressBank: "",
+                bankName: "",
+                bankBranch: "",
+                bankPlace: "",
             },
 
             //data dia chi giao hang (tab 4)
@@ -1568,6 +1603,8 @@ export default {
          * Cụm hàm format
          * CreatedBy: VDDong (17/06/2021)
          */
+
+        //các hàm xử lý phần combobox
         danhXungFormat(danhXungId){
             this.optionsName.forEach(optionName => {
                 if(danhXungId == optionName.id){
@@ -2015,17 +2052,17 @@ export default {
                 bankId: null,
                 userId: null,
                 bankCode: "",
-                nameBank: "",
-                branchBank: "",
-                addressBank: "",
+                bankName: "",
+                bankBranch: "",
+                bankPlace: "",
             };
-            this.banksOfEmployee.push(bank);
+            this.banksOfNcc.push(bank);
         },
         deleteBank(index){
-            this.banksOfEmployee.splice(index, 1);
+            this.banksOfNcc.splice(index, 1);
         },
         deleteAllBanks(){
-            this.banksOfEmployee = [];
+            this.banksOfNcc = [];
         },
 
         /**

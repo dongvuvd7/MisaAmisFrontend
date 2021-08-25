@@ -375,6 +375,24 @@ export default {
                 })
 
     },
+    // showNccDetail2(nccId){
+    //     //get data ncc to edit
+    //     return axios
+    //             .get(getAll + "/" + nccId)
+    //             .then((res) => {
+    //                 this.isShowDialogNcc = true;
+    //                 this.formmode = form.edit;
+    //                 this.selectedNcc = res.data;           
+    //                 // return Promise.resolve(); //resolve là hàm sẽ được gọi khi promise hoàn thành
+    //                 axios
+    //                   .get()
+    //             })
+    //             .catch((res) => {
+    //                 console.log(res);
+    //                 return Promise.reject(); //reject là hàm sẽ được gọi khi có lỗi xảy ra
+    //             })
+
+    // },
     //hiện dialog nhân bản
       showNccDuplicate(nccId){
         this.showNccDetail(nccId).then(() => 
