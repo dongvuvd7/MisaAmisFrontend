@@ -641,7 +641,8 @@
     import ErrorDialog from '../../common/pop-up/errorDialog.vue';
     import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
 
-    const getAll = "https://localhost:44342/api/v1/Nccs"
+    const getAll = "https://localhost:44342/api/v1/Nccs/"
+    const getAllBankNcc = "https://localhost:44342/api/v1/BankNccs/"
     const getBankNccByUserId = "https://localhost:44342/api/v1/Nccs/GetAllBankNccByUserId/"
 
     const form = {
@@ -668,7 +669,7 @@ export default {
     },
 
     created() {
-        this.banksOfNcc.push(this.bank); //auto có 1 hàng bank ban đầu
+        // this.banksOfNcc.push(this.bank); //auto có 1 hàng bank ban đầu
 
         //format combobox before edit
         //Khi bind dữ liệu từ table lên dialog, phần combobox nếu muốn bôi xanh vào dữ liệu từ trước thì phải gán cho nó theo id
@@ -678,15 +679,23 @@ export default {
         this.tkcn.id = this.ncc.tkcnMa;
 
         //tab ngân hàng, gọi các nhân hàng ra rồi bind lên table
-        axios
-            .get(getBankNccByUserId + this.ncc.nccId)
-            .then((res) => {
-                this.banksOfNcc = res.data;
-                console.log(res);
-            })
-            .catch((res) => {
-                console.log(res);
-            })
+        if(this.formmode == form.edit)
+        {
+            axios
+                .get(getBankNccByUserId + this.ncc.nccId)
+                .then((res) => {
+                    this.banksOfNcc = res.data;
+                    // console.log(res);
+                    console.log(res.status);
+                    if(res.status == 204){
+                        this.checkIfListBankEmptyEdit = true;
+                    }
+                    
+                })
+                .catch((res) => {
+                    console.log(res);
+                })
+        }
 
         //tab4, địa chỉ khác
         //phần này đáng ra ở database phải tạo table mới như BankNcc rồi làm giống vậy, nhưng lười nên làm 
@@ -697,15 +706,17 @@ export default {
         }
         this.dcghs.push(tempDcgh);
 
-        this.qgSelected = this.ncc.DckQg;
-        this.ttSelected = this.ncc.DckTt;
-        this.qhSelected = this.ncc.DckQh;
-        this.xpSelected = this.ncc.DckXp;
+        this.qgSelected = this.ncc.dckQg;
+        this.ttSelected = this.ncc.dckTt;
+        this.qhSelected = this.ncc.dckQh;
+        this.xpSelected = this.ncc.dckXp;
 
     },
 
     data() {
         return {
+
+            checkIfListBankEmptyEdit: false, //biến để fix lỗi khi mà edit ncc không lk bank nào thì bấm thêm dòng bị lỗi
 
             //xưng hô (tab1)
             danhXung: {
@@ -1500,41 +1511,43 @@ export default {
             console.log("Mã tỉnh thành: " + this.tt.code);
             // console.log("https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2");
 
-            axios
-                .get(
-                    "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2"
-                )
-                .then((res) => {
+            if(this.tt.code != null){ //chỉ khi tỉnh thành hợp lệ thì mới gọi api được, nếu không thì sẽ báo lỗi 400 do url api bị sai
+                axios
+                    .get(
+                        "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2"
+                    )
+                    .then((res) => {
 
-                    //Chọn một tỉnh thành khác cái thì combobox quận huyện với xã phưởng phải reset default
-                    this.qh.code = null;
-                    this.qh.name = null;
-                    this.qhSelected = [];
-                    this.optionsQh = [];
-                    this.initialOptionsQh = [];
+                        //Chọn một tỉnh thành khác cái thì combobox quận huyện với xã phưởng phải reset default
+                        this.qh.code = null;
+                        this.qh.name = null;
+                        this.qhSelected = [];
+                        this.optionsQh = [];
+                        this.initialOptionsQh = [];
 
-                    this.xp.code = null;
-                    this.xp.name = null;
-                    this.xpSelected = [];
-                    this.optionsXp = [];
-                    this.initialOptionsXp = [];
+                        this.xp.code = null;
+                        this.xp.name = null;
+                        this.xpSelected = [];
+                        this.optionsXp = [];
+                        this.initialOptionsXp = [];
 
-                    this.optionsQh = res.data.districts;
-                    console.log(this.optionsQh);
-                })
-                .catch((res) => {
-                    console.log(res);
-                })
-            axios
-                .get(
-                    "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2"
-                )
-                .then((res) => {
-                    this.initialOptionsQh = res.data.districts;
-                })
-                .catch((res) => {
-                    console.log(res);
-                })
+                        this.optionsQh = res.data.districts;
+                        console.log(this.optionsQh);
+                    })
+                    .catch((res) => {
+                        console.log(res);
+                    })
+                axios
+                    .get(
+                        "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=2"
+                    )
+                    .then((res) => {
+                        this.initialOptionsQh = res.data.districts;
+                    })
+                    .catch((res) => {
+                        console.log(res);
+                    })
+            }
         },
         /**
          * Theo dõi thay đổi từ combobox Quận / Huyện để chạy sang Xã / Phường
@@ -1545,55 +1558,56 @@ export default {
             console.log("Mã Quận/Huyện: " + this.qh.code);
             // console.log("https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=3");
 
+            if(this.tt.code != null){//chỉ khi tỉnh thành hợp lệ thì mới gọi api được, nếu không thì sẽ báo lỗi 400 do url api bị sai
+                axios
+                    .get(
+                        "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=3"
+                    )
+                    .then((res) => {
 
-            axios
-                .get(
-                    "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=3"
-                )
-                .then((res) => {
+                        //Chọn quận huyện khác thì phải reset lại xã phường
+                        this.xp.code = null;
+                        this.xp.name = null;
+                        this.xpSelected = [];
+                        this.optionsXp = [];
+                        this.initialOptionsXp = [];
 
-                    //Chọn quận huyện khác thì phải reset lại xã phường
-                    this.xp.code = null;
-                    this.xp.name = null;
-                    this.xpSelected = [];
-                    this.optionsXp = [];
-                    this.initialOptionsXp = [];
-
-                    //Xử lí để lấy dữ liệu theo đúng quận huyện (api trên mạng nên phải xử lí)
-                    this.tempXp = res.data.districts;
-                    console.log("tempXp:" + this.tempXp);
-                    for(var i=0; i<this.tempXp.length; i++){
-                        if(this.tempXp[i].code == this.qh.code){
-                            console.log("Mã quận/huyện: " + this.tempXp[i].code);
-                            // console.log(this.tempXp[i].wards);
-                            this.optionsXp = this.tempXp[i].wards;
-                            break;
+                        //Xử lí để lấy dữ liệu xã phường theo đúng quận huyện (api lấy trên mạng nên phải xử lí)
+                        this.tempXp = res.data.districts;
+                        console.log("tempXp:" + this.tempXp);
+                        for(var i=0; i<this.tempXp.length; i++){
+                            if(this.tempXp[i].code == this.qh.code){
+                                console.log("Mã quận/huyện: " + this.tempXp[i].code);
+                                // console.log(this.tempXp[i].wards);
+                                this.optionsXp = this.tempXp[i].wards;
+                                break;
+                            }
                         }
-                    }
-                    this.tempXp = [];
-                    console.log(this.optionsXp);
-                })
-                .catch((res) => {
-                    console.log(res);
-                })
+                        this.tempXp = [];
+                        console.log(this.optionsXp);
+                    })
+                    .catch((res) => {
+                        console.log(res);
+                    })
 
                 axios
-                .get(
-                    "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=3"
-                )
-                .then((res) => {
-                    this.tempXp = res.data.districts;
-                    for(var i=0; i<this.tempXp.length; i++){
-                        if(this.tempXp[i].code == this.qh.code){
-                            this.initialOptionsXp = this.tempXp[i].wards;
-                            break;
+                    .get(
+                        "https://provinces.open-api.vn/api/p/" + this.tt.code + "?depth=3"
+                    )
+                    .then((res) => {
+                        this.tempXp = res.data.districts;
+                        for(var i=0; i<this.tempXp.length; i++){
+                            if(this.tempXp[i].code == this.qh.code){
+                                this.initialOptionsXp = this.tempXp[i].wards;
+                                break;
+                            }
                         }
-                    }
-                    this.tempXp = [];
-                })
-                .catch((res) => {
-                    console.log(res);
-                })
+                        this.tempXp = [];
+                    })
+                    .catch((res) => {
+                        console.log(res);
+                    })
+            }
         },
         
     },
@@ -1973,7 +1987,7 @@ export default {
          * Reset lại các thông tin nhân viên khi bấm 'cất và thêm'
          * CreatedBy: VDDong (17/06/2021)
          */
-        resetEmployee(){
+        resetNcc(){
             this.$emit('showNccDialog');
             this.focusInput();
         },
@@ -1984,20 +1998,67 @@ export default {
          */
         formmodeValidation(){
             if(this.formmode == form.add) {
+                
+                this.ncc.nlhXungho = this.danhXung.name;
+                this.ncc.dkttMa = this.dktt.id;
+                this.ncc.tkcnMa = this.tkcn.id;
+                this.ncc.dckQg = this.qg.name;
+                this.ncc.dckTt = this.tt.name;
+                this.ncc.dckQh = this.qh.name;
+                this.ncc.dckXp = this.xp.name;
+
+                // console.log(this.dcghs[this.dcghs.length-1]);
+                console.log(this.dcghs.length);
+                var dcghAdd = JSON.parse(JSON.stringify(this.dcghs[0].diachigh))
+                console.log(dcghAdd)
+                this.ncc.dcgh = dcghAdd;
+
+                var nccIdToAddBanks = ""; //nccId hay chính là khóa ngoại userId của nccBanks
+
                 return axios
-                    .post(getAll, this.employee)
-                    .then((res) => {
-                        console.log(res);
-                        return Promise.resolve();
+                    .post(getAll, this.ncc) //post data ncc
+                    .then(() => {
+                        if(this.banksOfNcc.length == 0) { //nếu không có banks nào liên kết, báo thành công
+                            console.log("Khong co banks, them thanh cong");
+                            // return Promise.resolve();
+                        }
+                        else { //nếu có banks liên kết, đầu tiên phải lấy nccId của nhân viên mới đó (khóa ngoại của các banks liên kết), rồi mới post các banks lên
+                            axios
+                                .get("https://localhost:44342/api/v1/Nccs/GetNccByNccCode/" + this.ncc.nccCode) //lấy nhân viên vừa post lên (theo nccCode)
+                                .then((res) => {
+                                    nccIdToAddBanks = res.data.nccId;
+
+                                    for(var i=0; i<this.banksOfNcc.length; i++){
+                                        this.banksOfNcc[i].userId = nccIdToAddBanks;
+                                        this.banksOfNcc[i].bankId = nccIdToAddBanks; //tạm thời vì nếu để null thì bị 400 bad request nên cứ để thế này vào database nó tự set lại
+                                        var parsedobj = JSON.parse(JSON.stringify(this.banksOfNcc[i])); //nó là __ob__ nên phải convert sang array mới post được
+                                        console.log(parsedobj);
+
+                                        axios
+                                            .post(getAllBankNcc, parsedobj) //post các nccBanks
+                                            .then((res) => {
+                                                console.log(res);
+                                                return Promise.resolve();
+                                            })
+                                            .catch((res) => {
+                                                console.log(res);
+                                                return Promise.reject();
+                                            })
+
+                                    }
+                                })
+                                .catch((res) => {
+                                    console.log(res);
+                                })
+                        }                        
                     })
                     .catch((res) => {
-
                         var errorContent = res.response.data.devMsg;
 
-                        if(errorContent.includes("Mã nhân viên")) this.isValid.employeeCode = false;
-                        if(errorContent.includes("ĐT di động")) this.isValid.phone = false;
-                        if(errorContent.includes("ĐT cố định")) this.isValid.telephone = false;
+                        if(errorContent.includes("Mã nhà cung cấp")) this.isValid.nccCode = false;
+                        // if(errorContent.includes("Tên nhà cung cấp")) this.isValid.nccCode = false; // không cần vì nullValidation xử lý rồi
                         if(errorContent.includes("Email")) this.isValid.email = false;
+                        if(errorContent.includes("Website")) this.isValid.website = false;
 
                         this.errorMsg = errorContent;
                         this.isErrorDialogShow = true;
@@ -2005,19 +2066,54 @@ export default {
                     })
             }
             else if(this.formmode == form.edit){
+
+                this.ncc.nlhXungho = this.danhXung.name;
+                this.ncc.dkttMa = this.dktt.id;
+                this.ncc.tkcnMa = this.tkcn.id;
+                this.ncc.dckQg = this.qg.name;
+                this.ncc.dckTt = this.tt.name;
+                this.ncc.dckQh = this.qh.name;
+                this.ncc.dckXp = this.xp.name;
+
+                // console.log(this.dcghs[this.dcghs.length-1]);
+                var dcghEdit = JSON.parse(JSON.stringify(this.dcghs[0].diachigh))
+                console.log(dcghEdit)
+                this.ncc.dcgh = dcghEdit;
+
+                console.log(this.ncc)
+
                 return axios
-                    .put(getAll + "/" + this.employee.employeeId, this.employee)
-                    .then((res) => {
-                        console.log(res);
-                        return Promise.resolve();
+                    .put(getAll + this.ncc.nccId, this.ncc) //put thông tin ncc
+                    .then(() => {
+                        axios
+                            .delete(getAllBankNcc + this.ncc.nccId) //xóa toàn bộ banks hiện tại của ncc đó đi rồi post lại
+                            .then(() => {
+                                for(var i=0; i<this.banksOfNcc.length; i++){
+                                    this.banksOfNcc[i].userId = this.ncc.nccId;
+                                    this.banksOfNcc[i].bankId = this.ncc.nccId; //tạm thời vì nếu để null thì bị 400 bad request nên cứ để thế này vào database nó tự set lại
+                                    var parsedobj = JSON.parse(JSON.stringify(this.banksOfNcc[i]));
+                                    // console.log(parsedobj);
+                                    
+                                    axios
+                                        .post(getAllBankNcc, parsedobj) //thêm lại các ngân hàng liên kết ncc đó
+                                        .then((res) => {
+                                            console.log(res);
+                                            return Promise.resolve();
+                                        })
+                                        .catch((res) => {
+                                            console.log(res);
+                                            return Promise.reject();
+                                        })
+                                }
+                            })
                     })
                     .catch((res) => {
                         var errorContent = res.response.data.devMsg;
 
-                        if(errorContent.includes("Mã nhân viên")) this.isValid.employeeCode = false;
-                        if(errorContent.includes("ĐT di động")) this.isValid.phone = false;
-                        if(errorContent.includes("ĐT cố định")) this.isValid.telephone = false;
+                        if(errorContent.includes("Mã nhà cung cấp")) this.isValid.nccCode = false;
+                        // if(errorContent.includes("Tên nhà cung cấp")) this.isValid.nccCode = false; // không cần vì nullValidation xử lý rồi
                         if(errorContent.includes("Email")) this.isValid.email = false;
+                        if(errorContent.includes("Website")) this.isValid.website = false;
 
                         this.errorMsg = errorContent;
                         this.isErrorDialogShow = true;
@@ -2040,7 +2136,7 @@ export default {
         btnSaveAndAdd(){
             this.formValidation();
             if(this.isAppropriate){
-                this.formmodeValidation().then(() => this.resetEmployee());
+                this.formmodeValidation().then(() => this.resetNcc());
             }
         },
 
@@ -2056,6 +2152,12 @@ export default {
                 bankBranch: "",
                 bankPlace: "",
             };
+            console.log(this.banksOfNcc);
+            if(this.checkIfListBankEmptyEdit){ //không hiểu sao khi rời vào trường hợp edit ncc không liên kết với ngân hàng
+                                                //nào thì bấm thêm dòng lại bị lỗi, nên phải dùng hàm này để fix
+                this.banksOfNcc = [];
+                this.checkIfListBankEmptyEdit = false;
+            }
             this.banksOfNcc.push(bank);
         },
         deleteBank(index){
@@ -2074,6 +2176,8 @@ export default {
                 userId: null,
                 diachigh: "",
             };
+            console.log(this.dcghs);
+            console.log(this.dcghs.length);
             this.dcghs.push(dcgh);
         },
         deleteDcgh(index){
