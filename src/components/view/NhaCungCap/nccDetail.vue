@@ -2002,10 +2002,15 @@ export default {
                 this.ncc.nlhXungho = this.danhXung.name;
                 this.ncc.dkttMa = this.dktt.id;
                 this.ncc.tkcnMa = this.tkcn.id;
-                this.ncc.dckQg = this.qg.name;
-                this.ncc.dckTt = this.tt.name;
-                this.ncc.dckQh = this.qh.name;
-                this.ncc.dckXp = this.xp.name;
+                this.ncc.dckQg = this.qgSelected;
+                this.ncc.dckTt = this.ttSelected;
+                this.ncc.dckQh = this.qhSelected;
+                this.ncc.dckXp = this.xpSelected;
+
+                // console.log("QG: " + this.qg.name);
+                // console.log("TT: " + this.tt.name);
+                // console.log("QH: " + this.qh.name);
+                // console.log("XP: " + this.xp.name);
 
                 // console.log(this.dcghs[this.dcghs.length-1]);
                 console.log(this.dcghs.length);
@@ -2070,10 +2075,15 @@ export default {
                 this.ncc.nlhXungho = this.danhXung.name;
                 this.ncc.dkttMa = this.dktt.id;
                 this.ncc.tkcnMa = this.tkcn.id;
-                this.ncc.dckQg = this.qg.name;
-                this.ncc.dckTt = this.tt.name;
-                this.ncc.dckQh = this.qh.name;
-                this.ncc.dckXp = this.xp.name;
+                this.ncc.dckQg = this.qgSelected;
+                this.ncc.dckTt = this.ttSelected;
+                this.ncc.dckQh = this.qhSelected;
+                this.ncc.dckXp = this.xpSelected;
+
+                // console.log("QG: " + this.qgSelected);
+                // console.log("TT: " + this.ttSelected);
+                // console.log("QH: " + this.qhSelected);
+                // console.log("XP: " + this.xpSelected);
 
                 // console.log(this.dcghs[this.dcghs.length-1]);
                 var dcghEdit = JSON.parse(JSON.stringify(this.dcghs[0].diachigh))
