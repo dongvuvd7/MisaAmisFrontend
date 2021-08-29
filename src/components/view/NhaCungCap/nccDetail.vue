@@ -479,7 +479,8 @@
                                 <div class="rightTab4" style="height:  200px; overflow: scroll">
                                     <div class="rt4-header">
                                         <b style="margin-right: 20px; margin-top: 4px;">Địa chỉ giao hàng</b>
-                                        <input type="checkbox" class="btn-check" style="margin-left: 15px;"/>
+                                        <input type="checkbox" class="btn-check" style="margin-left: 15px;"
+                                         @click="setDckLikeNccAddress()" />
                                         <div class="div" style="margin-top: 3px;">Giống địa chỉ nhà cung cấp</div>
                                     </div>
 
@@ -715,6 +716,8 @@ export default {
 
     data() {
         return {
+
+            isSetDckLikeNccAddress : false,
 
             checkIfListBankEmptyEdit: false, //biến để fix lỗi khi mà edit ncc không lk bank nào thì bấm thêm dòng bị lỗi
 
@@ -1686,6 +1689,33 @@ export default {
         },
 
         /**
+         * Tab4: bind địa chỉ giao hàng khác giống địa chỉ của nhà cung cấp
+         */
+        setDckLikeNccAddress(){
+            console.log("dck like address ncc")
+            this.isSetDckLikeNccAddress = !this.isSetDckLikeNccAddress;
+            if(this.isSetDckLikeNccAddress){
+                this.dcghs = [];
+                var tempDcgh = {
+                    diachigh: this.ncc.nccAddress,
+                }
+                this.dcghs.push(tempDcgh);
+            }
+            else {
+                if(this.formmode == form.add){
+                    this.dcghs = [];
+                }
+                if(this.formmode == form.edit){
+                    this.dcghs = [];
+                    var tempDcgh2 = {
+                        diachigh: this.ncc.dcgh,
+                    }
+                    this.dcghs.push(tempDcgh2);
+                }
+            }
+        },
+
+        /**
          * So sánh 2 Object để kiểm tra xem dữ liệu đã thay đổi chưa
          * Return true: có thay đổi, false: chưa thay đổi
          * CreatedBy: VDDong (17/06/2021)
@@ -1716,14 +1746,23 @@ export default {
         */
         hideDialogDataCondition(){
             // console.log(JSON.parse(JSON.stringify(this.dcghs[0].diachigh)));
-           if(this.compareDataObject(this.initialNcc, this.ncc) || this.initialDanhxung != this.danhXung.name
-           || this.initialDktt != this.dktt.id || this.initialTkcn != this.tkcn.id || 
-           this.initialVitri != (this.qgSelected + this.ttSelected + this.qhSelected + this.xpSelected) ||
-           this.initialDcgh != JSON.parse(JSON.stringify(this.dcghs[0].diachigh))){
-               this.isDataChange = true;
-               this.errorMsg = errorMessage.dataChange;
-           }
-           else this.hideDialog();
+            if(this.formmode == form.edit){
+                if(this.compareDataObject(this.initialNcc, this.ncc) || this.initialDanhxung != this.danhXung.name
+                || this.initialDktt != this.dktt.id || this.initialTkcn != this.tkcn.id || 
+                this.initialVitri != (this.qgSelected + this.ttSelected + this.qhSelected + this.xpSelected) ||
+                this.initialDcgh != JSON.parse(JSON.stringify(this.dcghs[0].diachigh))){
+                    this.isDataChange = true;
+                    this.errorMsg = errorMessage.dataChange;
+                }
+                else this.hideDialog();
+            }
+            if(this.formmode == form.add){
+                if(this.compareDataObject(this.initialNcc, this.ncc)){
+                    this.isDataChange = true;
+                    this.errorMsg = errorMessage.dataChange;
+                }
+                else this.hideDialog();
+            }
         },
 
         /**
