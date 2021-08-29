@@ -723,17 +723,20 @@ export default {
                 id: null,
                 name: "",
             },
+            initialDanhxung: "", //dùng trong việc so sánh xem data có thay đổi không để báo dialog dataChange
 
             //điều khoản thanh toán (tab2)
             dktt: {
                 id: null,
                 name: "",
             },
+            initialDktt: "",
             //tài khoản cồng nợ (tab2)
             tkcn: {
                 id: null,
                 name: "",
             },
+            initialTkcn: "",
             //Quốc gia (tab4)
             qg: {
                 code: null,
@@ -765,6 +768,7 @@ export default {
                 name: "",
             },
             xpSelected: [],
+            initialVitri: "", //biến so sánh về các lựa chọn vị trí có thay đổi không để báo dataChange, làm biến gộp chung cả QG, TT, QH, XP lại cho nhanh
 
             //Biến kiểm tra xem dữ liệu combobox có show ra hay không
             isShowOption: false,
@@ -1425,7 +1429,8 @@ export default {
             dcghs: [],
             dcgh: {
                 diachigh: "",
-            }
+            },
+            initialDcgh: "", //biến để lưu trữ đcgh khi gọi từ api lên, dùng để so sánh xem data dcgh có thay đổi không còn báo dialog dataChange
 
         }
     },
@@ -1444,11 +1449,18 @@ export default {
     updated(){
     },
 
-    mounted() {
+    mounted() { //gần giống created, created là thực thi trước khi nhìn thấy nội dung, còn mounted là thực thi sau khi đã nhìn thấy các nội dung
         //auto focus vào ô input employeeCode
         this.focusInput();
         //copy ncc sang 1 object khac de so xem co su thay doi khong?
         this.initialNcc = {...this.ncc};
+        this.initialDanhxung = this.ncc.nlhXungho;
+        this.initialDktt = this.ncc.dkttMa;
+        this.initialTkcn = this.ncc.tkcnMa;
+        this.initialVitri = this.ncc.dckQg + this.ncc.dckTt + this.ncc.dckQh + this.ncc.dckXp;
+        // console.log(this.initialVitri);
+        this.initialDcgh = this.ncc.dcgh;
+        // console.log(this.initialDcgh);
     },
 
     watch: {
@@ -1703,7 +1715,11 @@ export default {
         * CreatedBy: VDDong (17/06/2021)
         */
         hideDialogDataCondition(){
-           if(this.compareDataObject(this.initialNcc, this.ncc)){
+            // console.log(JSON.parse(JSON.stringify(this.dcghs[0].diachigh)));
+           if(this.compareDataObject(this.initialNcc, this.ncc) || this.initialDanhxung != this.danhXung.name
+           || this.initialDktt != this.dktt.id || this.initialTkcn != this.tkcn.id || 
+           this.initialVitri != (this.qgSelected + this.ttSelected + this.qhSelected + this.xpSelected) ||
+           this.initialDcgh != JSON.parse(JSON.stringify(this.dcghs[0].diachigh))){
                this.isDataChange = true;
                this.errorMsg = errorMessage.dataChange;
            }
