@@ -9,6 +9,10 @@
                     <button id="btn-add" @click="showNccDialog()">
                         <span style="margin-right: 10px; font-weight: bold;">Thêm</span> | <i class="fas fa-caret-down" style="margin-left: 15px;"></i>
                     </button>
+                    <label id="btn-addFromExcel">
+                        <input type="file" @change="importFileExcel" id="uploadExcel"/>
+                        Thêm từ file Excel
+                    </label>
                 </div>
             </div>
             <div id="tablewrapper">
@@ -209,6 +213,8 @@ import NccDelete from "../NhaCungCap/nccDelete.vue";
 import NccStopUsing from '../NhaCungCap/nccStopUsing.vue';
 import NCCDetail from '../NhaCungCap/nccDetail.vue';
 import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
+
+import xlsx from 'xlsx';
 
 // khai báo biến cố định, code cho nhanh
 const getAll = "https://localhost:44342/api/v1/Nccs";
@@ -570,6 +576,79 @@ export default {
             this.errorMsg = "";
       },
 
+     /**
+      * Đọc file từ file excel bên ngoài
+      * CreatedBy: VDDong (27/09/2021)
+      */
+     //Lấy các tiêu đề của các cột trong file excel
+      getHeader(sheet) {
+      const XLSX = xlsx;
+      const headers = [];
+      const range = XLSX.utils.decode_range(sheet["!ref"]); // worksheet['!ref'] Is the valid range of the worksheet
+      let C;
+      /* Get cell value start in the first row */
+      const R = range.s.r; //Line / / column C
+      let i = 0;
+      for (C = range.s.c; C <= range.e.c; ++C) {
+        var cell =
+          sheet[
+            XLSX.utils.encode_cell({ c: C, r: R })
+          ]; /* Get the cell value based on the address  find the cell in the first row */
+        var hdr = "UNKNOWN" + C; // replace with your desired default
+        // XLSX.utils.format_cell Generate cell text value
+        if (cell && cell.t) hdr = XLSX.utils.format_cell(cell);
+        if(hdr.indexOf('UNKNOWN') > -1){
+          if(!i) {
+            hdr = '__EMPTY';
+          }else {
+            hdr = '__EMPTY_' + i;
+          }
+          i++;
+        }
+        headers.push(hdr);
+      }
+      return headers;
+    },
+    //Lấy ra các giá trị của từng row trong file excel (trừ row tiêu đề đầu mỗi cột)
+     importFileExcel(e) {
+      const files = e.target.files;
+      console.log(files);
+      if (!files.length) {
+        return ;
+      } else if (!/\.(xls|xlsx)$/.test(files[0].name.toLowerCase())) {
+        return alert("The upload format is incorrect. Please upload xls or xlsx format");
+      }
+      const fileReader = new FileReader();
+      fileReader.onload = ev => {
+        try {
+          const data = ev.target.result;
+          const XLSX = xlsx;
+          const workbook = XLSX.read(data, {
+            type: "binary"
+          });
+          const wsname = workbook.SheetNames[0]; // Take the first sheet，wb.SheetNames[0] :Take the name of the first sheet in the sheets
+          const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]); // Generate JSON table content，wb.Sheets[Sheet名]    Get the data of the first sheet
+          const excellist = []; // Clear received data
+          // Edit data
+          for (var i = 0; i < ws.length; i++) {
+            excellist.push(ws[i]);
+          }
+          console.log("Read results", excellist); // At this point, you get an array containing objects that need to be processed
+          // Get header2-1
+          const a = workbook.Sheets[workbook.SheetNames[0]];
+          const headers = this.getHeader(a);
+          console.log('headers', headers);
+          // Get header2-2
+        } catch (e) {
+          return alert("Read failure!");
+        }
+      };
+      fileReader.readAsBinaryString(files[0]);
+      var input = document.getElementById("uploadExcel");
+      input.value = "";
+    }
+    
+
   },
 
   computed: {
@@ -652,17 +731,35 @@ export default {
   top: 15px;
 }
 
-#btn-add {
-  height: 90%;
-  width: 120px;
-  border-radius: 25px;
-  border: 1px solid transparent;
-  color: #fff;
-  background-color: #2ca01c;
-}
-#btn-add:hover{
-  background-color: #2a7920;
-}
+  #btn-add {
+    height: 90%;
+    width: 120px;
+    border-radius: 25px;
+    border: 1px solid transparent;
+    color: #fff;
+    background-color: #2ca01c;
+  }
+  #btn-add:hover{
+    background-color: #2a7920;
+  } 
+  input[type="file"] {
+    display: none;
+  }
+  #btn-addFromExcel {
+    height: 20px;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    color: #fff;
+    background-color: #2ca01c;
+    margin-left: 10px;
+  }
+  #btn-addFromExcel:hover{
+    background-color: #2a7920;
+  }
+
 #tablewrapper {
   background: #fff;
   color: #111;
