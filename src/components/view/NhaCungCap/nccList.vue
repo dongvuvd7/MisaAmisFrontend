@@ -193,6 +193,13 @@
             @hidePopUp="hidePopUp"
         />
 
+        <AddFromExcelPopUp 
+          :isShow="isShowPopUpAddFromExcel"
+          :errorMsg="errorMsg"
+          @hidePopUp="hidePopUp"
+          @confirmAddFromExcel="AddFromExcel"
+        />
+
         <!--loading -->
         <div class="fa-3x" v-if="isBusy">
             <!--font awesome -->
@@ -213,6 +220,7 @@ import NccDelete from "../NhaCungCap/nccDelete.vue";
 import NccStopUsing from '../NhaCungCap/nccStopUsing.vue';
 import NCCDetail from '../NhaCungCap/nccDetail.vue';
 import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
+import AddFromExcelPopUp from './nccAddFromExcel.vue';
 
 import xlsx from 'xlsx';
 
@@ -236,6 +244,7 @@ export default {
       NccStopUsing,
       NCCDetail,
       ErrorPopUp,
+      AddFromExcelPopUp,
   },
 
   data() {
@@ -260,6 +269,10 @@ export default {
             isErrorPopUpShow: false,
             //Biến để nhận thông báo lỗi truyền vào popup
             errorMsg: "",
+            //Biến ẩn hiện thông báo xác nhận thêm từ file excel
+            isShowPopUpAddFromExcel: false,
+            //Mảng lưu trữ các bản ghi từ file excel
+            listRecordsExcel: [],
       }
   },
 
@@ -570,10 +583,13 @@ export default {
        * CreatedBy: VDDong (24/09/2021)
        */
       hidePopUp(){
-            //Đóng thông báo mã null, tên đơn vị null, mã nhân viên null
+            //Đóng thông báo 
             this.isErrorPopUpShow = false;
+            this.isShowPopUpAddFromExcel = false;
             //reset nội dung thông báo lỗi
             this.errorMsg = "";
+
+            this.loadData();
       },
 
      /**
@@ -610,7 +626,7 @@ export default {
       return headers;
     },
     //Lấy ra các giá trị của từng row trong file excel (trừ row tiêu đề đầu mỗi cột)
-     importFileExcel(e) {
+    importFileExcel(e) {
       const files = e.target.files;
       console.log(files);
       if (!files.length) {
@@ -633,6 +649,8 @@ export default {
           for (var i = 0; i < ws.length; i++) {
             excellist.push(ws[i]);
           }
+          this.listRecordsExcel = excellist;
+          // console.log(this.listRecordsExcel);
           console.log("Read results", excellist); // At this point, you get an array containing objects that need to be processed
           // Get header2-1
           const a = workbook.Sheets[workbook.SheetNames[0]];
@@ -644,8 +662,47 @@ export default {
         }
       };
       fileReader.readAsBinaryString(files[0]);
+      //setup lại input file thành bình thường
       var input = document.getElementById("uploadExcel");
       input.value = "";
+
+      //hiện popup xác nhận thêm nhiều bản ghi từ file excel
+      this.isShowPopUpAddFromExcel = true;
+      this.errorMsg = "Xác nhận thêm nhà cung cấp từ file excel"; //muốn hiện cả số bản ghi từ file với tên file nhưng chưa làm được
+                                                                  //đưa cái hiện popup này vào hàm bên trên thì lại xảy ra bất đồng bộ
+
+    },
+
+    AddFromExcel(){
+      console.log("Xác nhận thêm từ file excel");
+      for(let i=0; i<this.listRecordsExcel.length; i++){
+        // console.log(i);
+        // console.log(this.listRecordsExcel[i].Ghi_chu);
+        //Tạo ncc mới để thêm lần lượt
+        //File excel phải định dạng tiêu đề từng cột không dấu không cách như đặt tên biến thì mới chuyển thành thuộc tính của newNcc được
+        var newNcc = {};
+        newNcc.nccCode = this.listRecordsExcel[i].Ma_ncc;
+        newNcc.nccName = this.listRecordsExcel[i].Ten_ncc;
+        newNcc.nccPhone = this.listRecordsExcel[i].Dien_thoai;
+        newNcc.nhomNcc = this.listRecordsExcel[i].Nhom_ncc;
+        newNcc.nccAddress = this.listRecordsExcel[i].Dia_chi;
+        newNcc.ghichu = this.listRecordsExcel[i].Ghi_chu;
+        console.log(newNcc);
+        //gọi api thêm từng newNcc vào
+        axios
+          .post(getAll + "/", newNcc)
+          .then((res) => {
+            console.log(res);
+            this.loadData();
+            return Promise.resolve();
+          })
+          .catch((res) => {
+            console.log(res);
+            return Promise.reject();
+          })
+      }
+      this.listRecordsExcel = [];
+      this.hidePopUp();
     }
     
 
