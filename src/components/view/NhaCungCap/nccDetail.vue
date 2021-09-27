@@ -698,19 +698,22 @@ export default {
                 })
         }
 
-        //tab4, địa chỉ khác
-        //phần này đáng ra ở database phải tạo table mới như BankNcc rồi làm giống vậy, nhưng lười nên làm 
-        //thành 1 thuộc tính của bảng Ncc luôn -> khi post mới lên mà có nhiều địa chỉ khác 
-        //thì phải lấy cái dòng cuối cùng (dcghs[dcghs.length - 1])
-        var tempDcgh = {
-            diachigh: this.ncc.dcgh
-        }
-        this.dcghs.push(tempDcgh);
+        if(this.formmode == form.edit){
+            //tab4, địa chỉ khác
+            //phần này đáng ra ở database phải tạo table mới như BankNcc rồi làm giống vậy, nhưng lười nên làm 
+            //thành 1 thuộc tính của bảng Ncc luôn -> khi post mới lên mà có nhiều địa chỉ khác 
+            //thì phải lấy cái dòng cuối cùng (dcghs[dcghs.length - 1])
+            var tempDcgh = {
+                diachigh: this.ncc.dcgh
+            }
+            this.dcghs.push(tempDcgh);
 
-        this.qgSelected = this.ncc.dckQg;
-        this.ttSelected = this.ncc.dckTt;
-        this.qhSelected = this.ncc.dckQh;
-        this.xpSelected = this.ncc.dckXp;
+            this.qgSelected = this.ncc.dckQg;
+            this.ttSelected = this.ncc.dckTt;
+            this.qhSelected = this.ncc.dckQh;
+            this.xpSelected = this.ncc.dckXp;
+
+        }
 
     },
 
@@ -2056,22 +2059,28 @@ export default {
                 
                 this.ncc.nlhXungho = this.danhXung.name;
                 this.ncc.dkttMa = this.dktt.id;
-                this.ncc.tkcnMa = this.tkcn.id;
+                this.ncc.tkcnMa = this.tkcn.id; 
+
+                console.log("QG: " + this.qg.name);
+                console.log("TT: " + this.tt.name);
+                console.log("QH: " + this.qh.name);
+                console.log("XP: " + this.xp.name);
+
+                
                 this.ncc.dckQg = this.qgSelected;
                 this.ncc.dckTt = this.ttSelected;
                 this.ncc.dckQh = this.qhSelected;
-                this.ncc.dckXp = this.xpSelected;
+                this.ncc.dckXp = this.xpSelected; 
 
-                // console.log("QG: " + this.qg.name);
-                // console.log("TT: " + this.tt.name);
-                // console.log("QH: " + this.qh.name);
-                // console.log("XP: " + this.xp.name);
 
                 // console.log(this.dcghs[this.dcghs.length-1]);
                 console.log(this.dcghs.length);
-                var dcghAdd = JSON.parse(JSON.stringify(this.dcghs[0].diachigh))
-                console.log(dcghAdd)
-                this.ncc.dcgh = dcghAdd;
+                if(this.dcghs.length == 0) this.ncc.dcgh = null;
+                else{
+                    var dcghAdd = JSON.parse(JSON.stringify(this.dcghs[0].diachigh))
+                    console.log(dcghAdd)
+                    this.ncc.dcgh = dcghAdd;
+                }
 
                 var nccIdToAddBanks = ""; //nccId hay chính là khóa ngoại userId của nccBanks
 
@@ -2141,9 +2150,12 @@ export default {
                 // console.log("XP: " + this.xpSelected);
 
                 // console.log(this.dcghs[this.dcghs.length-1]);
-                var dcghEdit = JSON.parse(JSON.stringify(this.dcghs[0].diachigh))
-                console.log(dcghEdit)
-                this.ncc.dcgh = dcghEdit;
+                if(this.dcghs.length == 0) this.ncc.dcgh = null;
+                else {
+                    var dcghEdit = JSON.parse(JSON.stringify(this.dcghs[0].diachigh))
+                    console.log(dcghEdit)
+                    this.ncc.dcgh = dcghEdit;
+                }
 
                 console.log(this.ncc)
 

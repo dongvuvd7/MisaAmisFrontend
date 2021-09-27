@@ -58,7 +58,18 @@
                     </div>
 
                     <div id="search" :style="{'margin-top': !isShowStat ? '0px' : '-110px'}"> <!-- đóng stat thì đẩy thanh search lên (kéo theo đẩy cả table), sử dụng v-bind -->
+                        
+                        <!-- <div class="btn-wrapper-2">
+                          
+                        </div> -->
+                        <div :class="{'display-hide': !isDeleteMultiple}">
+                          <button id="btn-deleteMultiple" @click="deleteMultiple()">
+                            Xóa hàng loạt
+                          </button>
+                        </div>
+
                         <div id="search-bar-wrapper">
+
                             <div class="search-bar-and-icon">
                                 <input
                                 id="search-bar"
@@ -172,6 +183,12 @@
           @hideDialog="hideDialog"
         />
 
+        <ErrorPopUp
+            :isShow="isErrorPopUpShow"
+            :errorMsg="errorMsg"
+            @hidePopUp="hidePopUp"
+        />
+
         <!--loading -->
         <div class="fa-3x" v-if="isBusy">
             <!--font awesome -->
@@ -191,12 +208,14 @@ import Paging from "../../common/paging.vue";
 import NccDelete from "../NhaCungCap/nccDelete.vue";
 import NccStopUsing from '../NhaCungCap/nccStopUsing.vue';
 import NCCDetail from '../NhaCungCap/nccDetail.vue';
+import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
 
 // khai báo biến cố định, code cho nhanh
 const getAll = "https://localhost:44342/api/v1/Nccs";
 const getMaxCode = "https://localhost:44342/api/v1/Nccs/MaxCode";
 const getExport = "https://localhost:44342/api/v1/Nccs/Export";
 const getFilter = "https://localhost:44342/api/v1/Nccs/Filter?";
+const getBankNcc = "https://localhost:44342/api/v1/BankNccs/"
 
 const form = {
     add: "add",
@@ -210,6 +229,7 @@ export default {
       NccDelete,
       NccStopUsing,
       NCCDetail,
+      ErrorPopUp,
   },
 
   data() {
@@ -229,6 +249,11 @@ export default {
             isBusy: true, //loading animation, kiểm tra đã load dữ liệu xong chưa
             formmode: "", //phân biệt giữa sửa và thêm
             isShowStat : false, //đóng/mở bảng stat bên trên table
+            isDeleteMultiple : false, //ẩn/hiện button xóa nhiều bản ghi một lúc
+            //Biến để hiện pop-up thông báo đã xóa hàng loạt bản ghi thành công
+            isErrorPopUpShow: false,
+            //Biến để nhận thông báo lỗi truyền vào popup
+            errorMsg: "",
       }
   },
 
@@ -375,24 +400,6 @@ export default {
                 })
 
     },
-    // showNccDetail2(nccId){
-    //     //get data ncc to edit
-    //     return axios
-    //             .get(getAll + "/" + nccId)
-    //             .then((res) => {
-    //                 this.isShowDialogNcc = true;
-    //                 this.formmode = form.edit;
-    //                 this.selectedNcc = res.data;           
-    //                 // return Promise.resolve(); //resolve là hàm sẽ được gọi khi promise hoàn thành
-    //                 axios
-    //                   .get()
-    //             })
-    //             .catch((res) => {
-    //                 console.log(res);
-    //                 return Promise.reject(); //reject là hàm sẽ được gọi khi có lỗi xảy ra
-    //             })
-
-    // },
     //hiện dialog nhân bản
       showNccDuplicate(nccId){
         this.showNccDetail(nccId).then(() => 
@@ -501,16 +508,68 @@ export default {
                 }
             },
 
-            /**
-             * Xử lí việc chọn số bản ghi trên 1 trang
-             * info là số lượng bản trên 1 trang truyền từ comboBox lên
-             * CreatedBy: VDDong(14/06/2021)
-             */
-            handlePerPage(info) {
-                this.currentPage = 1;
-                this.perPage = info;
-                this.loadData();
-            },
+      /**
+       * Xử lí việc chọn số bản ghi trên 1 trang
+       * info là số lượng bản trên 1 trang truyền từ comboBox lên
+       * CreatedBy: VDDong(14/06/2021)
+       */
+      handlePerPage(info) {
+          this.currentPage = 1;
+          this.perPage = info;
+          this.loadData();
+      },
+
+      /**
+       * Xóa một loạt các bản ghi đánh dấu checkbox, id các bản ghi này lưu trong mảng checked
+       * CreatedBy: VDDong (24/09/2021)
+       */
+      deleteMultiple(){
+        console.log("multiple delete");
+        var newChecked = this.checked;
+        console.log(newChecked);
+        for(let i=0; i<newChecked.length; i++){
+          console.log(newChecked[i]);
+          axios
+            .delete(getBankNcc + newChecked[i]) //xóa ngân hàng liên kết với ncc
+            .then(() => {
+                axios
+                    .delete(getAll + "/" + newChecked[i]) //xóa ncc
+                    .then(() => {
+                        console.log("Xóa thành công");
+                        this.hideDialog();
+                    })
+                    .catch((res) => {
+                        console.log(res);
+                    })
+            })
+            .catch((res) => {
+                console.log(res);
+            })
+        }
+        //Ở đây đang xảy ra vấn đề là khi xóa xong thì mảng checked vẫn còn lưu các id bản ghi đã tích checkbox từ trước khi xóa
+        //nên là button xóa hàng loạt vẫn còn hiện (click vào thì vẫn báo xóa thành công nhưng ko có bản khi nào xóa vì đã xóa từ trước rồi)
+        //Nếu tại đây viết this.checked = [] thì sẽ xảy ra hiện tượng bất đồng bộ, nghĩa là api xóa chưa kịp chạy xong thì đã set mảng checked
+        //thành rỗng rồi khiến khi api xóa gọi đến thì không còn id để lấy ra xóa
+        //Chưa biết cách xử lí bất đồng bộ nên tạm thời lưu mảng checked sang mảng mới newChecked rồi lấy id để xóa từ newChecked, sau đó
+        //set this.checked = [] để tắt button xóa hàng loạt đi
+        this.checked = [];
+        //hiện popup báo số bản ghi đã xóa
+        this.isErrorPopUpShow = true;
+        this.errorMsg = "Bạn đã xóa " + newChecked.length + " nhà cung cấp"
+        
+      },
+
+      /**
+       * Tắt thông báo số bản ghi đã xóa hàng loạt
+       * CreatedBy: VDDong (24/09/2021)
+       */
+      hidePopUp(){
+            //Đóng thông báo mã null, tên đơn vị null, mã nhân viên null
+            this.isErrorPopUpShow = false;
+            //reset nội dung thông báo lỗi
+            this.errorMsg = "";
+      },
+
   },
 
   computed: {
@@ -532,6 +591,19 @@ export default {
           this.checked = checked;
         },
       },
+  },
+
+  watch: {
+    //hàm theo dõi các bản ghi được đánh dấu checkbox
+    //nếu số bản ghi đánh dấu >= 2 thì hiện button xóa hàng loạt
+    checked: function() {
+      console.log(this.checked);
+      // console.log("Number of checked: " + this.checked.length);
+      if(this.checked.length >= 2) {
+        this.isDeleteMultiple = true;
+      }
+      else this.isDeleteMultiple = false;
+    }
   },
   
 }
@@ -579,6 +651,7 @@ export default {
   height: 40px;
   top: 15px;
 }
+
 #btn-add {
   height: 90%;
   width: 120px;
@@ -681,6 +754,7 @@ export default {
 #search {
   height: 80px;
   width: 100%;
+  
 }
 #search-bar-wrapper {
   height: 80px;
@@ -701,6 +775,21 @@ export default {
 }
 .search-bar-and-icon:focus-within {
   border: 1px solid #2ca01c;
+}
+#btn-deleteMultiple {
+  height: 35px;
+  width: 150px;
+  border-radius: 4px;
+  border: 1px solid #c2c2c2;
+  color: #111;
+  background-color: #ccc;
+  position: absolute;
+  left: 40px;
+  margin-top: 20px;
+  
+}
+#btn-deleteMultiple:hover{
+  background-color: #a1a1a1;
 }
 #search-bar {
   width: 199px;
@@ -917,6 +1006,10 @@ tbody tr:hover {
         height: 48px;
         
       }
+
+.display-hide{
+  display: none;
+}
    
 
 </style>
