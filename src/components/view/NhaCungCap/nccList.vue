@@ -377,6 +377,9 @@ export default {
      * Refresh data
      */
     refreshData(){
+
+        this.checked = [],
+
         this.currentPage = 1;
         this.perPage = 20;
         this.loadData();
