@@ -6,9 +6,18 @@
                 <router-link class="back-title" tag="span" to="/quytrinh" style="cursor: pointer;"> <i class="fas fa-chevron-left">
                   </i> Tất cả danh mục</router-link>
                 <div class="btn-wrapper">
-                    <button id="btn-add" @click="showEmployeeDialog()">
-                        Thêm mới nhân viên
-                    </button>
+                  <button id="btn-delete-all" :class="{'btn-hide': !isDeleteMultiple}"
+                    @click="deleteMultiple()"
+                  >
+                    Xóa hàng loạt
+                  </button>
+                  <button id="btn-add" @click="showEmployeeDialog()">
+                      Thêm mới nhân viên
+                  </button>
+                  <button id="btn-add" >
+                    <i class="fas fa-table"></i>
+                    Thêm từ file Excel
+                  </button>
                 </div>
             </div>
             <div id="tablewrapper">
@@ -184,13 +193,18 @@
             @showEmployeeDialog="showEmployeeDialog"
         />
         <EmployeeDelete
-        :isShow="isShowDialogDelete"
-        @hideDialog="hideDialog"
-        :employee="selectedEmployee"
+          :isShow="isShowDialogDelete"
+          @hideDialog="hideDialog"
+          :employee="selectedEmployee"
         />
         <EmployeeStopUsing 
-        :isShow="isShowDialogStopUsing"
-        @hideDialog="hideDialog"
+          :isShow="isShowDialogStopUsing"
+          @hideDialog="hideDialog"
+        />
+        <ErrorPopUp 
+          :isShow="isErrorPopUpShow"
+          :errorMsg="errorMsg"
+          @hidePopUp="hidePopUp"
         />
 
         <!--loading -->
@@ -212,6 +226,7 @@ import Paging from "../../common/paging.vue";
 import EmployeeDetail from "../employee/employeeDetail.vue";
 import EmployeeDelete from "../employee/employeeDelete.vue";
 import EmployeeStopUsing from '../employee/employeeStopUsing.vue';
+import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
 
 // khai báo biến cố định, code cho nhanh
 const getAll = "https://localhost:44342/api/v1/Employees";
@@ -236,6 +251,7 @@ export default {
       EmployeeDetail,
       EmployeeDelete,
       EmployeeStopUsing,
+      ErrorPopUp,
   },
 
   data() {
@@ -291,6 +307,12 @@ export default {
             ],
             //biến để phân biệt đang ở trạng thái paging theo filter hay paging theo (sắp xếp và nhóm) để truyền vào onPageChange, phục vụ việc bấm chuyển trang
             formPagingSort: false,
+            //biến ẩn / hiện button xóa hàng loạt
+            isDeleteMultiple: false,
+            //Biến để hiện pop-up thông báo đã xóa hàng loạt bản ghi
+            isErrorPopUpShow: false,
+            //Biến để nhận thông báo lỗi truyền vào pop-up
+            errorMsg: "",
       }
   },
 
@@ -699,7 +721,7 @@ export default {
       chooseOptionDepart(option){
         //vì chưa kết hợp vừa nhóm vừa tìm kiếm nên khi chọn nhóm phòng ban thì reset default input tìm kiếm
         this.message = "";
-        
+
         //Gán giá trị được chọn cho id và text của loại sort
         this.thisDepart.id = option.id;
         console.log(this.thisDepart.id);
@@ -778,6 +800,59 @@ export default {
 
       },
 
+      /**
+       * Hàm xóa hàng loạt nhiều bản ghi một lúc
+       * Xóa các bản ghi có tích checkbox, xóa theo id các bản ghi được lưu trong mảng checked
+       * CreatedBy:
+       */
+      deleteMultiple(){
+        console.log("multiple delete");
+        var newChecked = this.checked;
+        console.log(newChecked);
+        for(let i=0; i<newChecked.length; i++){
+          console.log(newChecked[i]);
+          axios
+            .delete(getAll + "/" + newChecked[i])
+            .then(() => {
+              console.log("Xóa thành công");
+              this.hideDialog();
+            })
+            .catch((res) => {
+              console.log(res);
+            })
+        }
+        //Ở đây đang xảy ra vấn đề là khi xóa xong thì mảng checked vẫn còn lưu các id bản ghi đã tích checkbox từ trước khi xóa
+        //nên là button xóa hàng loạt vẫn còn hiện (click vào thì vẫn báo xóa thành công nhưng ko có bản khi nào xóa vì đã xóa từ trước rồi)
+        //Nếu tại đây viết this.checked = [] thì sẽ xảy ra hiện tượng bất đồng bộ, nghĩa là api xóa chưa kịp chạy xong thì đã set mảng checked
+        //thành rỗng rồi khiến khi api xóa gọi đến thì không còn id để lấy ra xóa
+        //Chưa biết cách xử lí bất đồng bộ nên tạm thời lưu mảng checked sang mảng mới newChecked rồi lấy id để xóa từ newChecked, sau đó
+        //set this.checked = [] để tắt button xóa hàng loạt đi
+        this.checked = [];
+        //hiện popup báo số bản ghi đã xóa
+        this.isErrorPopUpShow = true;
+        this.errorMsg = "Bạn đã xóa " + newChecked.length + " bản ghi nhân viên";
+
+        //reset lại combobox (trong trường hợp sắp xếp, nhóm rồi xóa)
+        this.thisSort = {
+          id: null,
+          text: null,
+        }
+        this.thisDepart = {
+          id: null,
+          text: null,
+        }
+
+      },
+
+      hidePopUp(){
+        //Đóng thông báo
+        this.isErrorPopUpShow = false,
+        //reset lại nội dung thông báo
+        this.errorMsg = "";
+
+        this.loadData();
+      }
+
   },
 
   computed: {
@@ -790,16 +865,36 @@ export default {
           return this.initialEmployees ? this.checked.length == this.employeeNumber : false;
         },
         set: function(value) {
-          var checked = [];
+          var checked = []; //mảng checked tạm thời, lưu trữ những bản ghi được tích checkbox
           if(value) {
             this.initialEmployees.forEach(function (employee) {
-              checked.push(employee.employeeId);
+              checked.push(employee.employeeId); //đưa các bản ghi tích checkbox vào mảng checked tạm
             });
           }
-          this.checked = checked;
+          this.checked = checked; //mảng checked chính  = mảng checked tạm
         },
       },
   },
+
+  watch: {
+    /**
+     * Hàm theo dõi các bản ghi được đánh dấu checkbox
+     * 
+     * CreatedBy:
+     */
+    checked: function() {
+      console.log("Number records of checked: " + this.checked.le);
+      console.log(this.checked);
+      if(this.checked.length >= 2){
+        // console.log("Có thể xóa hàng loạt");
+        this.isDeleteMultiple = true;
+      }
+      else {
+        // console.log("Tắt xóa hàng loạt");
+        this.isDeleteMultiple = false;
+      }
+    }
+  }
   
 }
 </script>
@@ -853,10 +948,28 @@ export default {
   border: 1px solid transparent;
   color: #fff;
   background-color: #2ca01c;
+  margin-left: 10px;
 }
 #btn-add:hover{
   background-color: #2a7920;
 }
+#btn-delete-all {
+  height: 85%;
+  width: 120px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  color: #fff;
+  background-color: #b96543;
+}
+#btn-delete-all:hover {
+  background-color: #aa441c;
+}
+.btn-hide{
+  display: none;
+}
+
+
+
 #tablewrapper {
   background: #fff;
   color: #111;
