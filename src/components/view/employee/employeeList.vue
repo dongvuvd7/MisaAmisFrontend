@@ -14,6 +14,62 @@
             <div id="tablewrapper">
                 <div id="table">
                     <div id="search">
+
+                        <div id="sort-and-group">
+                          <div class="sortBar">
+                            <!-- combobox -->
+                            <div class="dropdown-text-and-icon">
+                                <input type="text" class="input-blank-box" 
+                                    @focus="showDropDownContentSort()" 
+                                    @blur="hideDropDownContentSort()" 
+                                    @keyup="searchOptionSort()"
+                                    v-model="thisSort.text"
+                                    placeholder="Lựa chọn sắp xếp"
+                                />
+                                <button id="dropdown-icon" @click="showDropDownContentSort(listOptionsSort)" @blur="hideDropDownContentSort()"></button>
+                            </div>
+                            <div id="dropdown">     
+                                <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionsSort}" >
+                                    <div class="dropdown-content-a" 
+                                        :class="{'drop-down-content-selected' : optionSort.id == thisSort.id}"
+                                        v-for="optionSort in listOptionsSort" 
+                                        :key="optionSort.id" 
+                                        @click="chooseOptionSort(optionSort)" 
+                                        @mouseenter="enterClick()" 
+                                        @mouseleave="leaveClick()"
+                                    >{{optionSort.text}}</div>
+                                </div>
+                            </div>
+                          </div>
+                          <div class="groupBar">
+                            <!-- combobox -->
+                            <div class="dropdown-text-and-icon">
+                                <input type="text" class="input-blank-box" 
+                                    @focus="showDropDownContentDepart()" 
+                                    @blur="hideDropDownContentDepart()" 
+                                    @keyup="searchOptionDepart()"
+                                    v-model="thisDepart.text"
+                                    placeholder="Nhóm theo đơn vị"
+                                />
+                                <button id="dropdown-icon" @click="showDropDownContentDepart()" @blur="hideDropDownContentDepart()"></button>
+                            </div>
+                            <div id="dropdown">     
+                                <div class="dropdown-content" :class="{'dialog_hide': !isShowOptionsDepart}" >
+                                    <div class="dropdown-content-a" 
+                                        :class="{'drop-down-content-selected' : optionDepart.id == thisDepart.id}"
+                                        v-for="optionDepart in listOptionsDepart" 
+                                        :key="optionDepart.id" 
+                                        @click="chooseOptionDepart(optionDepart)" 
+                                        @mouseenter="enterClick()" 
+                                        @mouseleave="leaveClick()"
+                                    >{{optionDepart.text}}</div>
+                                </div>
+                            </div>
+                          </div>
+
+                        </div>
+
+
                         <div id="search-bar-wrapper">
                             <div class="search-bar-and-icon">
                                 <input
@@ -199,6 +255,42 @@ export default {
             totalPage: 0, //tổng số trang
             isBusy: true, //loading animation, kiểm tra đã load dữ liệu xong chưa
             formmode: "", //phân biệt giữa sửa và thêm
+
+            overClick: false, //Biến kiểm tra xem chuột có di chuyển vào các options hay không, phân biệt click với blur
+            //cụm biến của combobox sort
+            isShowOptionsSort: false,
+            thisSort: {
+              id: null,
+              text: null,
+            },
+            listOptionsSort: [
+              {id: 1, text: 'Thứ tự thêm mới'},
+              {id: 2, text: 'Tên khách hàng'},
+            ],
+            initialListOptionsSort: [
+              {id: 1, text: 'Thứ tự thêm mới'},
+              {id: 2, text: 'Tên khách hàng'},
+            ],
+            //cụm biến của combobox depart
+            isShowOptionsDepart: false,
+            thisDepart: {
+              id: null,
+              text: null,
+            },
+            listOptionsDepart: [
+              {id: '142cb08f-7c31-21fa-8e90-67245e8b283e', text: 'Phòng Đào tạo'},
+              {id: '17120d02-6ab5-3e43-18cb-66948daf6128', text: 'Phòng Kế toán'},
+              {id: '469b3ece-744a-45d5-957d-e8c757976496', text: 'Phòng Marketing'},
+              {id: '4e272fc4-7875-78d6-7d32-6a1673ffca7c', text: 'Phòng Nhân sự'},
+            ],
+            initialListOptionsDepart: [
+              {id: '142cb08f-7c31-21fa-8e90-67245e8b283e', text: 'Phòng Đào tạo'},
+              {id: '17120d02-6ab5-3e43-18cb-66948daf6128', text: 'Phòng Kế toán'},
+              {id: '469b3ece-744a-45d5-957d-e8c757976496', text: 'Phòng Marketing'},
+              {id: '4e272fc4-7875-78d6-7d32-6a1673ffca7c', text: 'Phòng Nhân sự'},
+            ],
+            //biến để phân biệt đang ở trạng thái paging theo filter hay paging theo (sắp xếp và nhóm) để truyền vào onPageChange, phục vụ việc bấm chuyển trang
+            formPagingSort: false,
       }
   },
 
@@ -300,11 +392,22 @@ export default {
      * Refresh data
      */
     refreshData(){
-        this.currentPage = 1;
-        this.perPage = 20;
-        this.loadData();
-        //set up mặc định cho combobox là lựa 20 bản ghi trên trang
-        this.$refs.comboBox.resetPerPage(); //hàm resetPerPage là hàm viết bên file comboBox.vue
+      //setup default combobox sort
+      this.thisSort = {
+        id: null,
+        text: null,
+      };
+      //setup default combobox depart
+      this.thisDepart = {
+        id: null,
+        text: null,
+      }
+
+      this.currentPage = 1;
+      this.perPage = 20;
+      this.loadData();
+      //set up mặc định cho combobox là lựa 20 bản ghi trên trang
+      this.$refs.comboBox.resetPerPage(); //hàm resetPerPage là hàm viết bên file comboBox.vue
     },
     
     /**
@@ -390,6 +493,17 @@ export default {
        * Tìm kiếm theo mã hoặc tên nhân viên
        */
       searchData(){
+        //Vì chưa kết hợp vừa tìm kiếm vừa sắp xếp (nhóm phòng ban) nên khi tìm kiếm thì setup default 2 combobox sắp xếp vs nhóm
+        this.thisSort = {
+          id: null,
+          text: null,
+        }
+        this.thisDepart = {
+          id: null,
+          text: null,
+        }
+
+        //Bắt đầu tìm kiếm
         this.currentPage = 1;
         axios
           .get(
@@ -475,44 +589,195 @@ export default {
         this.totalPage = Math.floor(this.employeeNumber / this.perPage) + 1;
         }
         if(page > 0 && page <= this.totalPage){
-            this.currentPage = page;
+          this.currentPage = page;
+          //nếu đang ở trạng thái sort với nhóm
+          //thì vẫn giữ api sắp xếp vs nhóm đó, chỉ đổi pageSize vs pageIndex
+          if(this.formPagingSort){
+            this.sortsBy();
+          }
+          //nếu đang ở trạng thái bình thường (sử dụng API filter)
+          else {
             axios
-                .get(
-                    getFilter + "pageSize=" +
-                                this.perPage +
-                                "&" +
-                                "pageIndex=" +
-                                this.currentPage +
-                                "&" +
-                                "filter=" +
-                                this.message
-                )
-                .then((res) => {
-                console.log(res);
-                this.employees = res.data.data;
+              .get(
+                  getFilter + "pageSize=" +
+                              this.perPage +
+                              "&" +
+                              "pageIndex=" +
+                              this.currentPage +
+                              "&" +
+                              "filter=" +
+                              this.message
+              )
+              .then((res) => {
+              console.log(res);
+              this.employees = res.data.data;
 
-                //format gender and department
-                this.genderFormat(this.employees);
-                this.departmentsFormat(this.employees);
-                //Số lượng bản ghi hợp lệ 
-                this.employeeNumber = res.data.totalRecord;
-                })
-                .catch((res) => {
-                    console.log(res);
-                });
-                }
-            },
+              //format gender and department
+              this.genderFormat(this.employees);
+              this.departmentsFormat(this.employees);
+              //Số lượng bản ghi hợp lệ 
+              this.employeeNumber = res.data.totalRecord;
+              })
+              .catch((res) => {
+                  console.log(res);
+              });
+          }
+        }
+      },
 
-            /**
-             * Xử lí việc chọn số bản ghi trên 1 trang
-             * info là số lượng bản trên 1 trang truyền từ comboBox lên
-             * CreatedBy: VDDong(14/06/2021)
-             */
-            handlePerPage(info) {
-                this.currentPage = 1;
-                this.perPage = info;
-                this.loadData();
-            },
+      /**
+       * Xử lí việc chọn số bản ghi trên 1 trang
+       * info là số lượng bản trên 1 trang truyền từ comboBox lên
+       * CreatedBy: VDDong(14/06/2021)
+       */
+      handlePerPage(info) {
+        //vì khi đổi số bản ghi trên trang thì dữ liệu reset về API filter
+        //nên set default 2 cái combobox sắp xếp với nhóm phòng ban
+        this.thisSort = {
+          id: null,
+          text: null,
+        }
+        this.thisDepart = {
+          id: null,
+          text: null,
+        }
+
+        //setup lại số bản ghi trên trang để hiển thị ra
+        this.currentPage = 1;
+        this.perPage = info;
+        this.loadData();
+      },
+
+      /**
+       * Cụm hàm liên quan đến combobox
+       */
+      //Khi di chuyển chuột vào trong các option
+      enterClick(){
+          //Gán overClick = true để tránh lỗi click và focusout overlapping (khi click thì focusout sẽ chạy trước mà không chạy click)
+          this.overClick = true;
+      },
+      //Khi di chuyển chuột ra khỏi các option
+      leaveClick(){
+          this.overClick = false;
+      },
+      //Ẩn / hiện combobox
+      showDropDownContentSort(){
+        this.listOptionsSort = this.initialListOptionsSort;
+        this.isShowOptionsSort = !this.isShowOptionsSort;
+      },
+      hideDropDownContentSort(){
+        if(this.overClick == false) this.isShowOptionsSort = false;
+      },
+      showDropDownContentDepart(){
+        this.listOptionsDepart = this.initialListOptionsDepart;
+        this.isShowOptionsDepart = !this.isShowOptionsDepart;
+      },
+      hideDropDownContentDepart(){
+        if(this.overClick == false) this.isShowOptionsDepart = false;
+      },
+
+      //Gán dữ liệu đã chọn từ combobox để thực thi và hiện ra combobox
+      chooseOptionSort(option){
+        //Vì chưa kết hợp vừa sort vừa tìm kiếm nên khi chọn sort thì reset default thanh input tìm kiếm
+        this.message = "";
+
+        //Gán giá trị được chọn cho id và text của loại sort
+        this.thisSort.id = option.id;
+        console.log(this.thisSort.id);
+        this.sortFormat(this.thisSort.id);
+        this.overClick = false;
+        this.hideDropDownContentSort();
+        this.sortsBy(); //thực thi
+      },
+      sortFormat(Id){ //Format tên loại sort để binding vào combobox
+        this.listOptionsSort.forEach(optionSort => {
+          if(Id == optionSort.id){
+            this.thisSort.text = optionSort.text;
+          }
+        });
+      },
+      chooseOptionDepart(option){
+        //vì chưa kết hợp vừa nhóm vừa tìm kiếm nên khi chọn nhóm phòng ban thì reset default input tìm kiếm
+        this.message = "";
+        
+        //Gán giá trị được chọn cho id và text của loại sort
+        this.thisDepart.id = option.id;
+        console.log(this.thisDepart.id);
+        this.departFormat(this.thisDepart.id);
+        this.overClick = false;
+        this.hideDropDownContentDepart();
+        this.sortsBy(); //thực thi
+      },
+      departFormat(Id){ //Format tên loại phòng ban để binding vào form
+        this.listOptionsDepart.forEach(optionDepart => {
+          if(Id == optionDepart.id){
+            this.thisDepart.text = optionDepart.text;
+          }
+        });
+      },
+
+      //Tìm kiếm ở ô input so với các option ở combobox
+      searchOptionSort(){
+        this.listOptionsSort = this.initialListOptionsSort.filter(option => {
+            return (
+                option.text.toLowerCase().includes(this.thisSort.text.toLowerCase())
+            )
+        });
+      },
+      searchOptionDepart(){
+        this.listOptionsDepart = this.initialListOptionsDepart.filter(option => {
+          return (
+            option.text.toLowerCase().includes(this.thisDepart.text.toLowerCase())
+          )
+        });
+      },
+
+      //Hàm gọi đến API để xử lý việc sắp xếp và nhóm phòng ban
+      sortsBy(){
+        console.log("sort all: " + this.thisSort.id);
+        console.log("sort depart: " + this.thisDepart.id);
+
+        this.formPagingSort = true; //chuyển sang trạng thái paging theo sắp xếp và nhóm
+        if(this.thisDepart.id == null) this.thisDepart.id = ""; //nếu không chọn sắp xếp hay phòng ban thì đưa về "" cho phù hợp API
+        if(this.thisSort.id == null || this.thisSort.id == 1){ //mặc định hoặc sắp xếp thứ tự thêm mới (là sortByCode)
+          axios
+            .get("https://localhost:44342/api/v1/Employees/SortByCode?" + "pageSize=" + this.perPage + "&pageIndex=" + this.currentPage + "&departmentString=" + this.thisDepart.id)
+            .then((res) => {
+              console.log(res);
+              this.employeeNumber = res.data.totalRecord;
+              this.employees = res.data.data;
+              if(this.employeeNumber % this.perPage == 0){
+                this.totalPage = this.employeeNumber / this.perPage;
+              }
+              else {
+                this.totalPage = Math.floor(this.employeeNumber / this.perPage) + 1;
+              }
+            })
+            .catch((res) => {
+              console.log(res);
+            })
+        }
+        else if(this.thisSort.id == 2){ //sắp xếp theo tên nhân viên
+          axios
+            .get("https://localhost:44342/api/v1/Employees/SortByName?" + "pageSize=" + this.perPage + "&pageIndex=" + this.currentPage + "&departmentString=" + this.thisDepart.id)
+            .then((res) => {
+              console.log(res);
+              this.employeeNumber = res.data.totalRecord;
+              this.employees = res.data.data;
+              if(this.employeeNumber % this.perPage == 0){
+                this.totalPage = this.employeeNumber / this.perPage;
+              }
+              else {
+                this.totalPage = Math.floor(this.employeeNumber / this.perPage) + 1;
+              }
+            })
+            .catch((res) => {
+              console.log(res);
+            })
+        }
+
+      },
+
   },
 
   computed: {
@@ -616,6 +881,27 @@ export default {
   height: 80px;
   width: 100%;
 }
+#sort-and-group{
+  height: 80px;
+  width: 400px;
+  /* background-color: aqua; */
+  display: flex;
+  align-items: center;
+  position: absolute;
+  left: 40px;
+}
+  .sortBar{
+    width: 180px;
+    height: 50px;
+  }
+
+  .groupBar{
+    width: 180px;
+    height: 50px;
+    /* background-color: rgb(37, 165, 122); */
+    margin-left: 20px;
+  }
+
 #search-bar-wrapper {
   height: 80px;
   /* background-color: aqua; */
@@ -725,6 +1011,99 @@ tbody tr:hover {
   left: 54%;
   top: 50%;
   transform: translate(-50%, -50%);
+}
+
+
+/**
+  Dropdown
+*/
+.dialog_hide{
+  display: none;
+}
+.dropdown-text-and-icon{
+    width: 100%;
+    padding: 6px 6px;
+    font-size: 13px;
+    height: 35px;
+    border: 1px solid #babec5;
+    box-sizing: border-box;
+    margin-top: 8px;
+    margin-bottom: -2px;
+    border-radius: 3px;
+    /* box-sizing: border-box; */
+    display: flex;
+    align-items: center;
+}
+.dropdown-text-and-icon:focus-within{
+    border-color: #2ca01c;
+}
+.input-blank-box{
+    height: 30px;
+    width: calc(100% - 32px);
+    /* padding: 6px 0 6px 12px; */
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    border-collapse: collapse;
+    border-radius: 4px;
+}
+#dropdown-icon{
+    width: 30px;
+    height: 30px;
+    border: none;
+    outline: none;
+    border-collapse: collapse;
+    border-radius: 4px;
+    background: url(../../../assets/img/Sprites.64af8f61.svg) no-repeat;
+    background-position: -545px -352px;
+    transform: rotate(0deg);
+    transition: transform .15s linear;
+    /* background-color: aqua; */
+}
+#dropdown{
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    /* background-color: #2ca01c; */
+}
+.dropdown-content{
+    /* height: 120px; */
+    width: 100%;
+    
+    top: -10px;
+    position: absolute;
+    z-index: 2;
+    /* right: 0px; */
+    border: 1px solid;
+    background-color: #fff;
+    border-radius: 3px;
+    border: 1px solid #babec5;
+    cursor: pointer;
+}
+.dropdown-content-a{
+    /* position: absolute; */
+    height: 30px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    margin-bottom: 2px;
+}
+.dropdown-content-a:hover{
+    color: #2ca01c;
+    background-color: rgb(219, 219, 219);
+}
+.drop-down-content-selected{
+    background-color: #2ca01c;
+    color: #fff;
+}
+.drop-down-content-selected:hover{
+    background-color: #2ca01c;
+    color: #fff;
 }
 
 </style>
