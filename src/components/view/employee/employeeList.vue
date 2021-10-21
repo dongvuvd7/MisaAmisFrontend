@@ -14,10 +14,11 @@
                   <button id="btn-add" @click="showEmployeeDialog()">
                       Thêm mới nhân viên
                   </button>
-                  <button id="btn-add" >
+                  <label id="btn-addFromExcel">
                     <i class="fas fa-table"></i>
+                    <input type="file" id="uploadExcel" @change="importFileExcel"/>
                     Thêm từ file Excel
-                  </button>
+                  </label>
                 </div>
             </div>
             <div id="tablewrapper">
@@ -206,6 +207,12 @@
           :errorMsg="errorMsg"
           @hidePopUp="hidePopUp"
         />
+        <AddFromExcelPopUp 
+          :isShow="isShowPopUpAddFromExcel"
+          :errorMsg="errorMsg"
+          @hidePopUp="hidePopUp"
+          @confirmAddFromExcel="AddFromExcel"
+        />
 
         <!--loading -->
         <div class="fa-3x" v-if="isBusy">
@@ -227,6 +234,8 @@ import EmployeeDetail from "../employee/employeeDetail.vue";
 import EmployeeDelete from "../employee/employeeDelete.vue";
 import EmployeeStopUsing from '../employee/employeeStopUsing.vue';
 import ErrorPopUp from '../../common/pop-up/errorPopUp.vue';
+import AddFromExcelPopUp from './employeeAddFromExcel.vue';
+import xlsx from 'xlsx';
 
 // khai báo biến cố định, code cho nhanh
 const getAll = "https://localhost:44342/api/v1/Employees";
@@ -252,6 +261,7 @@ export default {
       EmployeeDelete,
       EmployeeStopUsing,
       ErrorPopUp,
+      AddFromExcelPopUp,
   },
 
   data() {
@@ -313,6 +323,11 @@ export default {
             isErrorPopUpShow: false,
             //Biến để nhận thông báo lỗi truyền vào pop-up
             errorMsg: "",
+
+            //Biến ẩn hiện thông báo thêm từ file excel
+            isShowPopUpAddFromExcel: false,
+            //Mảng lưu trữ các bản ghi từ file excel
+            listRecordsExcel: [],
       }
   },
 
@@ -844,14 +859,154 @@ export default {
 
       },
 
+      /**
+       * Tắt thông báo xóa hàng loạt
+       * 
+       * CreatedBy:
+       */
       hidePopUp(){
         //Đóng thông báo
         this.isErrorPopUpShow = false,
+        this.isShowPopUpAddFromExcel = false,
         //reset lại nội dung thông báo
         this.errorMsg = "";
 
         this.loadData();
+      },
+
+    /**
+    * Đọc file từ file excel bên ngoài
+    * CreatedBy: VDDong (27/09/2021)
+    */
+     //Lấy các tiêu đề của các cột trong file excel
+    getHeader(sheet) {
+      const XLSX = xlsx;
+      const headers = [];
+      const range = XLSX.utils.decode_range(sheet["!ref"]); // worksheet['!ref'] Is the valid range of the worksheet
+      let C;
+      /* Get cell value start in the first row */
+      const R = range.s.r; //Line / / column C
+      let i = 0;
+      for (C = range.s.c; C <= range.e.c; ++C) {
+        var cell =
+          sheet[
+            XLSX.utils.encode_cell({ c: C, r: R })
+          ]; /* Get the cell value based on the address  find the cell in the first row */
+        var hdr = "UNKNOWN" + C; // replace with your desired default
+        // XLSX.utils.format_cell Generate cell text value
+        if (cell && cell.t) hdr = XLSX.utils.format_cell(cell);
+        if(hdr.indexOf('UNKNOWN') > -1){
+          if(!i) {
+            hdr = '__EMPTY';
+          }else {
+            hdr = '__EMPTY_' + i;
+          }
+          i++;
+        }
+        headers.push(hdr);
       }
+      return headers;
+    },
+    //Lấy ra các giá trị của từng row trong file excel (trừ row tiêu đề đầu mỗi cột)
+    importFileExcel(e) {
+      const files = e.target.files;
+      console.log(files);
+      if (!files.length) {
+        return ;
+      } else if (!/\.(xls|xlsx)$/.test(files[0].name.toLowerCase())) { //Nếu file không đúng định dạng
+        return alert("The upload format is incorrect. Please upload xls or xlsx format");
+      }
+      const fileReader = new FileReader();
+      fileReader.onload = ev => {
+        try {
+          const data = ev.target.result;
+          const XLSX = xlsx;
+          const workbook = XLSX.read(data, {
+            type: "binary"
+          });
+          const wsname = workbook.SheetNames[0]; // Take the first sheet，wb.SheetNames[0] :Take the name of the first sheet in the sheets
+          const ws = XLSX.utils.sheet_to_json(workbook.Sheets[wsname]); // Generate JSON table content，wb.Sheets[Sheet名]    Get the data of the first sheet
+          //biến excellist là biến nhận các bản ghi từ file excel
+          const excellist = []; // Clear received data
+          // Edit data
+          for (var i = 0; i < ws.length; i++) {
+            excellist.push(ws[i]);
+          }
+          this.listRecordsExcel = excellist;
+          // console.log(this.listRecordsExcel);
+          console.log("Read results", excellist); // At this point, you get an array containing objects that need to be processed
+          // Get header2-1
+          const a = workbook.Sheets[workbook.SheetNames[0]];
+          const headers = this.getHeader(a);
+          console.log('headers', headers);
+          // Get header2-2
+        } catch (e) {
+          return alert("Read failure!");
+        }
+      };
+      fileReader.readAsBinaryString(files[0]);
+      //setup lại input file thành bình thường
+      var input = document.getElementById("uploadExcel");
+      input.value = "";
+
+      //hiện popup xác nhận thêm nhiều bản ghi từ file excel
+      this.isShowPopUpAddFromExcel = true;
+      this.errorMsg = "Xác nhận thêm nhà cung cấp từ file excel"; //muốn hiện cả số bản ghi từ file với tên file nhưng chưa làm được
+                                                                  //đưa cái hiện popup này vào hàm bên trên thì lại xảy ra bất đồng bộ
+    },
+    //Xử lý việc thêm các bản ghi vừa lấy từ file excel (đang lưu ở listRecordsExcel) lên database
+    AddFromExcel(){
+      console.log("Xác nhận thêm từ file excel");
+      for(let i=0; i<this.listRecordsExcel.length; i++){
+        //Tạo employee mới để thêm lần lượt
+        //File excel phải định dạng tiêu đề từng cột không dấu không cách như đặt tên biến thì mới chuyển thành thuộc tính employee được
+        var newEmployee = {};
+        newEmployee.employeeCode = this.listRecordsExcel[i].Ma_NV;
+        newEmployee.fullName = this.listRecordsExcel[i].Ten_NV;
+        newEmployee.gender = this.formatGenderFromExcelToDB(this.listRecordsExcel[i].Gioi_tinh);
+        newEmployee.dateOfBirth = this.formatDobFromExcelToDB(this.listRecordsExcel[i].Ngay_sinh);
+        newEmployee.jobTitle = this.listRecordsExcel[i].Chuc_danh;
+        newEmployee.departmentId = this.formatDepartmentFromExcelToDB(this.listRecordsExcel[i].Don_vi);
+        newEmployee.bankAccount = this.listRecordsExcel[i].STK;
+        newEmployee.bankName = this.listRecordsExcel[i].Ten_ngan_hang;
+        console.log(newEmployee);
+        //Gọi API thêm từng newEmployee vào database
+        axios
+          .post(getAll + "/", newEmployee)
+          .then((res) => {
+            console.log(res);
+            this.loadData();
+            return Promise.resolve();
+          })
+          .catch((res) => {
+            console.log(res);
+            return Promise.reject();
+          })
+      }
+      this.listRecordsExcel = [];
+      this.hidePopUp();
+    },
+    //Hàm format ngày sinh từ file excel sang chuẩn định dạng yyyy-MM-dd để có thể add vào database
+    formatDobFromExcelToDB(stringDob){
+      const str = stringDob.split("/");
+      return str[2] + "-" + str[1] + "-" + str[0];
+    },
+    //Hàm format tên đơn vị từ file excel sang departmentId để thêm vào DB
+    formatDepartmentFromExcelToDB(departmentName){
+      if(departmentName == 'Phòng Đào tạo') return '142cb08f-7c31-21fa-8e90-67245e8b283e';
+      else if(departmentName == 'Phòng Kế toán') return '17120d02-6ab5-3e43-18cb-66948daf6128';
+      else if(departmentName == 'Phòng Marketing') return '469b3ece-744a-45d5-957d-e8c757976496';
+      else if(departmentName == 'Phòng Nhân sự') return '4e272fc4-7875-78d6-7d32-6a1673ffca7c';
+    },
+    //Hàm format gender name từ file excel sang dạng int để thêm vào DB
+    formatGenderFromExcelToDB(genderName){
+      if(genderName == 'Nữ') return 0;
+      else if(genderName == 'Nam') return 1;
+      else if(genderName == 'Khác') return 2;
+    },
+
+
+
 
   },
 
@@ -966,6 +1121,24 @@ export default {
 }
 .btn-hide{
   display: none;
+}
+/*button input file*/
+input[type="file"] {
+  display: none;
+}
+#btn-addFromExcel {
+  height: 48%;
+  display: inline-block;
+  padding: 6px;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  color: #fff;
+  background-color: #2ca01c;
+  margin-left: 10px;
+}
+#btn-addFromExcel:hover{
+  background-color: #2a7920;
 }
 
 
